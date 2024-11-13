@@ -1,0 +1,4 @@
+
+[0m[2m[35m$[0m [2m[1mcivet -rewrite-ts-imports -c lib/*.civet -o dist/[0m
+[31mInvalid command-line argument: -rewrite-ts-imports[39m
+[0m[31merror[0m[2m:[0m script [1m"build"[0m exited with code 1[0m

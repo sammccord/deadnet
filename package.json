@@ -1,0 +1,17 @@
+{
+  "name": "deadnet",
+  "module": "index.ts",
+  "type": "module",
+  "packageManager": "bun@1.1.34",
+  "workspaces": ["packages/*"],
+  "devDependencies": {
+    "@types/bun": "^1.1.13",
+    "turbo": "^2.2.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@biomejs/biome": "^1.9.4"
+  }
+}

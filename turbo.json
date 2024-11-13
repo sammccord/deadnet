@@ -1,0 +1,25 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "daemon": true,
+  "tasks": {
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "cache": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist", "*.tsbuildinfo", ".next", "build"],
+      "cache": true
+    },
+    "@deadnet/bebop#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["*.tsbuildinfo", "lib"],
+      "cache": true
+    }
+  }
+}

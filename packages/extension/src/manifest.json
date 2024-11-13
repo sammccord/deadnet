@@ -1,0 +1,38 @@
+{
+  "{{chrome}}.manifest_version": 3,
+  "{{firefox}}.manifest_version": 2,
+  "name": "Test",
+  "version": "1.0.0",
+  "description": "Test Vite Plugin Extension",
+  "icons": {
+    "16": "icon/16.png",
+    "48": "icon/48.png",
+    "128": "icon/128.png"
+  },
+  "{{chrome}}.action": {
+    "default_popup": "popup/index.html"
+  },
+  "{{firefox}}.browser_action": {
+    "default_popup": "popup/index.html"
+  },
+  "options_ui": {
+    "page": "options/index.html",
+    "open_in_tab": true,
+    "{{firefox}}.chrome_style": false
+  },
+  "background": {
+    "{{chrome}}.service_worker": "background/index.ts",
+    "{{firefox}}.scripts": ["background/index.ts"]
+  },
+  "{{chrome}}.sandbox": {
+    "pages": ["sandbox/test.html", "sandbox/page2.html"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["content-scripts/script/index.ts"],
+      "css": ["test.scss"]
+    }
+  ],
+  "permissions": ["tabs", "{{firefox}}.<all_urls>", "{{chrome}}.activeTab"]
+}

@@ -1,0 +1,15 @@
+{
+  "include": ["schema/**/*.bop"],
+  "exclude": ["node_modules"],
+  "generators": {
+    "ts": {
+      "outFile": "./lib/index.ts"
+    }
+  },
+  "watchOptions": {
+    "excludeDirectories": [
+       "node_modules",
+       "lib"
+    ],
+  }
+}

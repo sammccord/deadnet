@@ -1,0 +1,21 @@
+{
+  "name": "@deadnet/extension",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "dev:firefox": "TARGET=firefox vite dev",
+    "build": "tsc && vite build",
+    "build:firefox": "pnpm i && tsc && TARGET=firefox vite build",
+    "validate": "web-ext lint -s dist"
+  },
+  "dependencies": {
+    "@deadnet/bebop": "workspace:*"
+  },
+  "devDependencies": {
+    "sass": "^1.49.9",
+    "typescript": "^5.3.2",
+    "vite": "^5.0.0",
+    "vite-plugin-web-extension": "latest"
+  }
+}
