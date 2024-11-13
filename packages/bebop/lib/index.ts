@@ -20,46 +20,84 @@ import {  BaseClient, MethodInfo, CallOptions } from "@tempojs/client";
 import { ServiceRegistry, BaseService, ServerContext, BebopMethodAny, BebopMethod } from "@tempojs/server";
 
 export const BEBOP_SCHEMA = new Uint8Array ([
-3, 3, 0, 0, 0, 77, 101, 115, 115, 97, 103, 101, 0, 1, 0,
-0, 12, 0, 0, 0, 0, 3, 109, 101, 116, 104, 111, 100, 73,
-100, 0, 251, 255, 255, 255, 0, 104, 101, 97, 100, 101,
-114, 115, 0, 241, 255, 255, 255, 245, 255, 255, 255, 245,
-255, 255, 255, 0, 100, 97, 116, 97, 0, 242, 255, 255, 255,
-0, 254, 255, 255, 255, 0, 72, 101, 108, 108, 111, 82, 101,
-113, 117, 101, 115, 116, 0, 1, 0, 0, 4, 0, 0, 0, 0, 1,
-110, 97, 109, 101, 0, 245, 255, 255, 255, 0, 72, 101, 108,
-108, 111, 82, 101, 115, 112, 111, 110, 115, 101, 0, 1, 0,
-0, 4, 0, 0, 0, 0, 1, 115, 101, 114, 118, 105, 99, 101, 77,
-101, 115, 115, 97, 103, 101, 0, 245, 255, 255, 255, 0, 1,
-0, 0, 0, 71, 114, 101, 101, 116, 101, 114, 0, 0, 4, 0, 0,
-0, 115, 97, 121, 72, 101, 108, 108, 111, 0, 0, 0, 1, 0, 0,
-0, 2, 0, 0, 0, 85, 246, 254, 77, 115, 97, 121, 72, 101,
-108, 108, 111, 67, 108, 105, 101, 110, 116, 0, 0, 2, 1, 0,
-0, 0, 2, 0, 0, 0, 196, 25, 111, 204, 115, 97, 121, 72,
-101, 108, 108, 111, 83, 101, 114, 118, 101, 114, 0, 0, 1,
-1, 0, 0, 0, 2, 0, 0, 0, 84, 166, 66, 202, 115, 97, 121,
-72, 101, 108, 108, 111, 68, 117, 112, 108, 101, 120, 0, 0,
-3, 1, 0, 0, 0, 2, 0, 0, 0, 66, 158, 17, 152
+3, 3, 0, 0, 0, 77, 101, 115, 115, 97, 103, 101, 0, 2, 0,
+5, 0, 0, 0, 10, 109, 101, 116, 104, 111, 100, 73, 100, 0,
+251, 255, 255, 255, 0, 1, 109, 101, 115, 115, 97, 103,
+101, 73, 100, 0, 244, 255, 255, 255, 0, 2, 116, 105, 109,
+101, 115, 116, 97, 109, 112, 0, 243, 255, 255, 255, 0, 3,
+100, 97, 116, 97, 0, 242, 255, 255, 255, 0, 254, 255, 255,
+255, 0, 4, 100, 101, 97, 100, 108, 105, 110, 101, 0, 243,
+255, 255, 255, 0, 5, 115, 116, 97, 116, 117, 115, 0, 254,
+255, 255, 255, 0, 6, 109, 115, 103, 0, 245, 255, 255, 255,
+0, 7, 97, 117, 116, 104, 111, 114, 105, 122, 97, 116, 105,
+111, 110, 0, 245, 255, 255, 255, 0, 8, 99, 114, 101, 100,
+101, 110, 116, 105, 97, 108, 0, 245, 255, 255, 255, 0, 9,
+99, 117, 115, 116, 111, 109, 77, 101, 116, 97, 100, 97,
+116, 97, 0, 241, 255, 255, 255, 245, 255, 255, 255, 242,
+255, 255, 255, 0, 245, 255, 255, 255, 0, 10, 72, 101, 108,
+108, 111, 82, 101, 113, 117, 101, 115, 116, 0, 1, 0, 0, 4,
+0, 0, 0, 0, 1, 110, 97, 109, 101, 0, 245, 255, 255, 255,
+0, 72, 101, 108, 108, 111, 82, 101, 115, 112, 111, 110,
+115, 101, 0, 1, 0, 0, 4, 0, 0, 0, 0, 1, 115, 101, 114,
+118, 105, 99, 101, 77, 101, 115, 115, 97, 103, 101, 0,
+245, 255, 255, 255, 0, 1, 0, 0, 0, 71, 114, 101, 101, 116,
+101, 114, 0, 0, 4, 0, 0, 0, 115, 97, 121, 72, 101, 108,
+108, 111, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 85, 246, 254,
+77, 115, 97, 121, 72, 101, 108, 108, 111, 67, 108, 105,
+101, 110, 116, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 196, 25,
+111, 204, 115, 97, 121, 72, 101, 108, 108, 111, 83, 101,
+114, 118, 101, 114, 0, 0, 1, 1, 0, 0, 0, 2, 0, 0, 0, 84,
+166, 66, 202, 115, 97, 121, 72, 101, 108, 108, 111, 68,
+117, 112, 108, 101, 120, 0, 0, 3, 1, 0, 0, 0, 2, 0, 0, 0,
+66, 158, 17, 152
 ]);
 
 export interface IMessage extends BebopRecord {
 
-  readonly methodId: number;
+  methodId?: number;
 
-  readonly headers: Map<string, string>;
+  messageId?: Guid;
 
-  readonly data: Uint8Array;
+  timestamp?: Date;
+
+  data?: Uint8Array;
+
+  deadline?: Date;
+
+  status?: number;
+
+  msg?: string;
+
+  authorization?: string;
+
+  credential?: string;
+
+  customMetadata?: Map<string, Array<string>>;
 }
 
 export class Message implements IMessage {
-  public readonly methodId: number;
-  public readonly headers: Map<string, string>;
-  public readonly data: Uint8Array;
+  public methodId?: number;
+  public messageId?: Guid;
+  public timestamp?: Date;
+  public data?: Uint8Array;
+  public deadline?: Date;
+  public status?: number;
+  public msg?: string;
+  public authorization?: string;
+  public credential?: string;
+  public customMetadata?: Map<string, Array<string>>;
 
   constructor(record: IMessage) {
     this.methodId = record.methodId;
-    this.headers = record.headers;
+    this.messageId = record.messageId;
+    this.timestamp = record.timestamp;
     this.data = record.data;
+    this.deadline = record.deadline;
+    this.status = record.status;
+    this.msg = record.msg;
+    this.authorization = record.authorization;
+    this.credential = record.credential;
+    this.customMetadata = record.customMetadata;
   }
 
   /**
@@ -87,9 +125,36 @@ export class Message implements IMessage {
    * Validates that the specified dynamic object can become an instance of {@link Message}.
    */
   public static validateCompatibility(record: IMessage): void {
-    BebopTypeGuard.ensureUint32(record.methodId)
-    BebopTypeGuard.ensureMap(record.headers, BebopTypeGuard.ensureString, BebopTypeGuard.ensureString);
-    BebopTypeGuard.ensureArray(record.data, BebopTypeGuard.ensureUint8);
+    if (record.methodId !== undefined) {
+      BebopTypeGuard.ensureUint32(record.methodId)
+    }
+    if (record.messageId !== undefined) {
+      BebopTypeGuard.ensureGuid(record.messageId)
+    }
+    if (record.timestamp !== undefined) {
+      BebopTypeGuard.ensureDate(record.timestamp)
+    }
+    if (record.data !== undefined) {
+      BebopTypeGuard.ensureArray(record.data, BebopTypeGuard.ensureUint8);
+    }
+    if (record.deadline !== undefined) {
+      BebopTypeGuard.ensureDate(record.deadline)
+    }
+    if (record.status !== undefined) {
+      BebopTypeGuard.ensureUint8(record.status)
+    }
+    if (record.msg !== undefined) {
+      BebopTypeGuard.ensureString(record.msg)
+    }
+    if (record.authorization !== undefined) {
+      BebopTypeGuard.ensureString(record.authorization)
+    }
+    if (record.credential !== undefined) {
+      BebopTypeGuard.ensureString(record.credential)
+    }
+    if (record.customMetadata !== undefined) {
+      BebopTypeGuard.ensureMap(record.customMetadata, BebopTypeGuard.ensureString, (element) => BebopTypeGuard.ensureArray(element, BebopTypeGuard.ensureString));
+    }
   }
 
   /**
@@ -123,13 +188,61 @@ export class Message implements IMessage {
 
   public static encodeInto(record: IMessage, view: BebopView): number {
     const before = view.length;
-    view.writeUint32(record.methodId);
-    view.writeUint32(record.headers.size);
-    for (const [k0, v0] of record.headers) {
-      view.writeString(k0);
-      view.writeString(v0);
+    const pos = view.reserveMessageLength();
+    const start = view.length;
+    if (record.methodId !== undefined) {
+      view.writeByte(1);
+      view.writeUint32(record.methodId);
     }
-    view.writeBytes(record.data);
+    if (record.messageId !== undefined) {
+      view.writeByte(2);
+      view.writeGuid(record.messageId);
+    }
+    if (record.timestamp !== undefined) {
+      view.writeByte(3);
+      view.writeDate(record.timestamp);
+    }
+    if (record.data !== undefined) {
+      view.writeByte(4);
+      view.writeBytes(record.data);
+    }
+    if (record.deadline !== undefined) {
+      view.writeByte(5);
+      view.writeDate(record.deadline);
+    }
+    if (record.status !== undefined) {
+      view.writeByte(6);
+      view.writeByte(record.status);
+    }
+    if (record.msg !== undefined) {
+      view.writeByte(7);
+      view.writeString(record.msg);
+    }
+    if (record.authorization !== undefined) {
+      view.writeByte(8);
+      view.writeString(record.authorization);
+    }
+    if (record.credential !== undefined) {
+      view.writeByte(9);
+      view.writeString(record.credential);
+    }
+    if (record.customMetadata !== undefined) {
+      view.writeByte(10);
+      view.writeUint32(record.customMetadata.size);
+    for (const [k0, v0] of record.customMetadata) {
+      view.writeString(k0);
+      {
+        const length1 = v0.length;
+        view.writeUint32(length1);
+        for (let i1 = 0; i1 < length1; i1++) {
+          view.writeString(v0[i1]);
+        }
+      }
+    }
+    }
+    view.writeByte(0);
+    const end = view.length;
+    view.fillMessageLength(pos, end - start);
     const after = view.length;
     return after - before;
   }
@@ -141,28 +254,77 @@ export class Message implements IMessage {
   }
 
   public static readFrom(view: BebopView): IMessage {
-    let field0: number;
-    field0 = view.readUint32();
-    let field1: Map<string, string>;
-    {
-      let length0 = view.readUint32();
-      field1 = new Map<string, string>();
-      for (let i0 = 0; i0 < length0; i0++) {
-        let k0: string;
-        let v0: string;
-        k0 = view.readString();
-        v0 = view.readString();
-        field1.set(k0, v0);
+    let message: IMessage = {};
+    const length = view.readMessageLength();
+    const end = view.index + length;
+    while (true) {
+      switch (view.readByte()) {
+        case 0:
+          return new Message(message);
+
+        case 1:
+          message.methodId = view.readUint32();
+          break;
+
+        case 2:
+          message.messageId = view.readGuid();
+          break;
+
+        case 3:
+          message.timestamp = view.readDate();
+          break;
+
+        case 4:
+          message.data = view.readBytes();
+          break;
+
+        case 5:
+          message.deadline = view.readDate();
+          break;
+
+        case 6:
+          message.status = view.readByte();
+          break;
+
+        case 7:
+          message.msg = view.readString();
+          break;
+
+        case 8:
+          message.authorization = view.readString();
+          break;
+
+        case 9:
+          message.credential = view.readString();
+          break;
+
+        case 10:
+          {
+        let length0 = view.readUint32();
+        message.customMetadata = new Map<string, Array<string>>();
+        for (let i0 = 0; i0 < length0; i0++) {
+          let k0: string;
+          let v0: Array<string>;
+          k0 = view.readString();
+          {
+            let length1 = view.readUint32();
+            v0 = new Array<string>(length1);
+            for (let i1 = 0; i1 < length1; i1++) {
+              let x1: string;
+              x1 = view.readString();
+              v0[i1] = x1;
+            }
+          }
+          message.customMetadata.set(k0, v0);
+        }
+      }
+          break;
+
+        default:
+          view.index = end;
+          return new Message(message);
       }
     }
-    let field2: Uint8Array;
-    field2 = view.readBytes();
-    let message: IMessage = {
-      methodId: field0,
-      headers: field1,
-      data: field2,
-    };
-    return new Message(message);
   }
 }
 

@@ -1,0 +1,10 @@
+
+[0m[2m[35m$[0m [2m[1mtsc && vite build[0m
+[96mtsconfig.json[0m:[93m6[0m:[93m18[0m - [91merror[0m[90m TS6310: [0mReferenced project '/home/sammccord/work/deadnet/packages/bebop' may not disable emit.
+
+[7m6[0m   "references": [{ "path": "../bebop" }]
+[7m [0m [91m                 ~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+Found 1 error in tsconfig.json[90m:6[0m
+
