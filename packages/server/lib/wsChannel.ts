@@ -348,10 +348,6 @@ export class TempoWSChannel extends BaseChannel {
     } else {
       customMetadata.set('user-agent', [this.userAgent]);
     }
-    // Add AbortSignal if available
-    if (options?.controller) {
-      requestInit.signal = options.controller.signal;
-    }
     const credentialHeader = await this.credential.getHeader();
     if (credentialHeader) {
       headers.set(credentialHeader.name, credentialHeader.value);
