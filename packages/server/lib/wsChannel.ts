@@ -1,4 +1,4 @@
-import type { Message, IMessage } from '@deadnet/bebop';
+import type { IMessage, Message } from '@deadnet/bebop';
 import {
   BaseChannel,
   type CallCredential,
@@ -329,35 +329,25 @@ export class TempoWSChannel extends BaseChannel {
     context: ClientContext,
     method: MethodInfo<BebopRecord, BebopRecord>,
     options?: CallOptions | undefined,
-  ): Promise<RequestInit> {
+  ): Promise<Message> {
     // Set up request headers
 
-    const customMetadata = new Map();
+    const customMetadata = new Map<string, [string]>();
     customMetadata.set('path', [`/${method.service}/${method.name}`]);
-    customMetadata.set('service-name', method.service);
-    const message: IMessage = {
+    customMetadata.set('service-name', [method.service]);
+    const requestInit: IMessage = {
       methodId: method.id,
       customMetadata: new Map(),
     };
     if (options?.deadline) {
-      headers.set('tempo-deadline', `${options.deadline.toUnixTimestamp()}`);
+      requestInit.deadline = new Date(options.deadline.toUnixTimestamp());
     }
     // we can't modify the useragent in browsers, so use x-user-agent instead
     if (ExecutionEnvironment.isBrowser || ExecutionEnvironment.isWebWorker) {
-      headers.set('x-user-agent', this.userAgent);
+      customMetadata.set('x-user-agent', [this.userAgent]);
     } else {
-      headers.set('user-agent', this.userAgent);
+      customMetadata.set('user-agent', [this.userAgent]);
     }
-    // Add custom metadata to headers if available
-    if (context.outgoingMetadata.size() > 0) {
-      headers.set('custom-metadata', context.outgoingMetadata.toHttpHeader());
-    }
-    const requestInit: RequestInit = {
-      method: 'POST',
-      body: payload,
-      headers: headers,
-    };
-    (requestInit as any).duplex = 'half';
     // Add AbortSignal if available
     if (options?.controller) {
       requestInit.signal = options.controller.signal;
