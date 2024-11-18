@@ -8,7 +8,7 @@ message Message {
     7 -> string msg;
     8 -> string authorization;
     9 -> string credential;
-    10 -> map[string, string[]] customMetadata;
+    10 -> map[string, string] customMetadata;
 }
 
 /**

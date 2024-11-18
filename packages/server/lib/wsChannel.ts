@@ -1,4 +1,5 @@
-import type { IMessage, Message } from '@deadnet/bebop';
+import type { IMessage } from '@deadnet/bebop';
+import { Message } from '@deadnet/bebop';
 import {
   BaseChannel,
   type CallCredential,
@@ -25,13 +26,13 @@ import {
   tempoStream,
 } from '@tempojs/common';
 import type { BebopRecord } from 'bebop';
+import { Guid } from 'bebop';
 import {
   type Backoff,
-  type Queue,
   type Websocket,
   type WebsocketBuffer,
   WebsocketBuilder,
-  WebsocketEvent,
+  WebsocketEvent
 } from 'websocket-ts';
 
 export type TempoWSChannelOptions = TempoChannelOptions & {
@@ -53,6 +54,11 @@ export class TempoWSChannel extends BaseChannel {
 
   public readonly ws: Websocket;
 
+  private readonly events = new EventTarget()
+  private readonly clientStreams: Map<
+    string,
+    Promise<any>
+  > = new Map();
   private readonly isSecure: boolean;
   private readonly maxReceiveMessageSize: number;
   private readonly credential: CallCredential;
@@ -111,6 +117,16 @@ export class TempoWSChannel extends BaseChannel {
         `closed TempoWSChannel for ${target.href} / ${this.userAgent}`,
       ),
     );
+    this.ws.addEventListener(WebsocketEvent.message, (_ws, ev) => {
+      let message: Message
+      if (typeof ev.data === 'string') message = new Message(Message.fromJSON(ev.data))
+      else message = new Message(Message.decode(ev.data))
+      const messageId = message.messageId!.toString()
+      this.events.dispatchEvent(new CustomEvent(message.messageId!.toString(), { detail: message }))
+      this.logger.debug(
+        `received new message ${messageId}`
+      );
+    })
 
     this.logger.debug(
       `created new TempoWSChannel for ${target.href} / ${this.userAgent}`,
@@ -198,10 +214,10 @@ export class TempoWSChannel extends BaseChannel {
 
     const execute = deadline
       ? (retryAttempt: number) =>
-          deadline.executeWithinDeadline(
-            async () => await func(retryAttempt),
-            abortController,
-          )
+        deadline.executeWithinDeadline(
+          async () => await func(retryAttempt),
+          abortController,
+        )
       : (retryAttempt: number) => func(retryAttempt);
 
     while (attempt < retryPolicy.maxAttempts) {
@@ -259,65 +275,50 @@ export class TempoWSChannel extends BaseChannel {
 
     return Promise.reject(
       lastError ||
-        new TempoError(
-          TempoStatusCode.DEADLINE_EXCEEDED,
-          'Failed to execute function with retry policy',
-        ),
+      new TempoError(
+        TempoStatusCode.DEADLINE_EXCEEDED,
+        'Failed to execute function with retry policy',
+      ),
     );
   }
 
-  /**
-   * Fetches data from the specified target using the provided request options.
-   *
-   * @param {RequestInit} init - The request options to be used with the fetch API.
-   * @returns {Promise<Response>} - A promise resolving to the Response object.
-   * @throws {TempoError} - Throws a TempoError with a specific TempoStatusCode in case of network issues,
-   *                        invalid URL, fetch abort, or any unexpected error.
-   * @private
-   */
-  private async fetchData(init: RequestInit): Promise<Response> {
-    try {
-      return await fetch(this.target, init);
-    } catch (error) {
-      if (error instanceof Error) {
-        // depending on the runtime (browser vs node) the error message may be different, but they all mean
-        // they failed to connect to the target
-        if (
-          error.message.match(/(failed to fetch)|(load failed)|(fetch failed)/i)
-        ) {
-          throw new TempoError(
-            TempoStatusCode.UNAVAILABLE,
-            'RPC fetch failed to target',
-            error,
-          );
-          // this means the AbortController was signaled to abort the fetch
-        } else if (error.name === 'AbortError') {
-          throw new TempoError(
+  private async fetchUnary(init: Message, options?: CallOptions): Promise<Message> {
+    return new Promise((resolve, reject) => {
+      const messageId = init.messageId!.toString()
+      const listener = (message: CustomEvent<Message>) => {
+        resolve(message.detail)
+        this.events.removeEventListener(messageId, listener as EventListener)
+      }
+      if (options?.controller) {
+        options.controller.signal.addEventListener('abort', () => {
+          this.events.removeEventListener(messageId, listener as EventListener)
+          reject(new TempoError(
             TempoStatusCode.ABORTED,
             'RPC fetch aborted',
-            error,
-          );
-        }
-        throw new TempoError(
-          TempoStatusCode.UNKNOWN,
-          `unexpected error while fetching`,
-          error,
-        );
+            {},
+          ))
+        })
       }
-      throw new TempoError(
-        TempoStatusCode.UNKNOWN,
-        `unexpected error while fetching`,
-        { data: error },
-      );
-    }
+      this.events.addEventListener(messageId, listener as EventListener)
+      this.ws.send(this.ws.binaryType === 'blob' ? Message.encodeToJSON(init) : init.encode())
+    })
   }
+
+  // should loop over generator, send all, and resolve on one response
+  private async fetchClientStream(init: Message, generator: AsyncGenerator<BebopRecord, void, undefined>, options?: CallOptions): Promise<Message> { }
+
+  // should send message, then return a createEventIterator from incoming events, stopping on CANCEL
+  private async fetchServerStream(init: Message, options?: CallOptions): AsyncGenerator<BebopRecord, void, undefined> { }
+
+  // should do both client and server stream logic
+  private async fetchDuplexStream(init: Message, options?: CallOptions): AsyncGenerator<BebopRecord, void, undefined> { }
 
   /**
    * Creates a `RequestInit` object for a given payload, context, method and optional call options.
    * This object can be used to make an HTTP request using the Fetch API.
    *
    * @private
-   * @param {Uint8Array | ReadableStream<Uint8Array>} payload - The payload to be sent in the request.
+   * @param {Uint8Array} payload - The payload to be sent in the request.
    * @param {ClientContext} context - The context of the client making the request.
    * @param {MethodInfo<BebopRecord, BebopRecord>} method - Information about the method being called.
    * @param {CallOptions | undefined} options - Optional configuration for the call.
@@ -325,39 +326,37 @@ export class TempoWSChannel extends BaseChannel {
    * @throws {TempoError} Throws an error if there's a problem while getting the credential header.
    */
   private async createRequest(
-    payload: Uint8Array | ReadableStream<Uint8Array>,
+    payload: Uint8Array,
     context: ClientContext,
     method: MethodInfo<BebopRecord, BebopRecord>,
     options?: CallOptions | undefined,
   ): Promise<Message> {
-    // Set up request headers
-
-    const customMetadata = new Map<string, [string]>();
-    customMetadata.set('path', [`/${method.service}/${method.name}`]);
-    customMetadata.set('service-name', [method.service]);
+    const customMetadata = new Map<string, string>();
+    customMetadata.set('path', `/${method.service}/${method.name}`);
+    customMetadata.set('service-name', method.service);
     const requestInit: IMessage = {
+      messageId: Guid.newGuid(),
       methodId: method.id,
       customMetadata: new Map(),
+      data: payload,
     };
     if (options?.deadline) {
       requestInit.deadline = new Date(options.deadline.toUnixTimestamp());
     }
     // we can't modify the useragent in browsers, so use x-user-agent instead
     if (ExecutionEnvironment.isBrowser || ExecutionEnvironment.isWebWorker) {
-      customMetadata.set('x-user-agent', [this.userAgent]);
+      customMetadata.set('x-user-agent', this.userAgent);
     } else {
-      customMetadata.set('user-agent', [this.userAgent]);
+      customMetadata.set('user-agent', this.userAgent);
     }
     const credentialHeader = await this.credential.getHeader();
     if (credentialHeader) {
-      headers.set(credentialHeader.name, credentialHeader.value);
-      requestInit.credentials = 'include';
-      requestInit.cache = 'no-cache';
+      requestInit.credential = credentialHeader.value;
     }
-    return requestInit;
+    return new Message(requestInit);
   }
 
-  private makeCustomMetaData(_metadata: Map<string, string[]>): Metadata {
+  private makeCustomMetaData(_metadata: Map<string, string>): Metadata {
     const metadata = new Metadata();
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     (metadata as any).data = _metadata;
@@ -396,42 +395,10 @@ export class TempoWSChannel extends BaseChannel {
       throw new TempoError(statusCode, tempoMessage);
     }
 
-    // const responseContentType = response.headers.get('content-type');
-    // if (responseContentType === null) {
-    //   throw new TempoError(
-    //     TempoStatusCode.INVALID_ARGUMENT,
-    //     'content-type missing on response',
-    //   );
-    // }
-    // const contentType = TempoUtil.parseContentType(responseContentType);
-    // if (contentType.format !== this.contentType) {
-    //   throw new TempoError(
-    //     TempoStatusCode.INVALID_ARGUMENT,
-    //     `response content-type does not match request: ${contentType.format} !== ${this.contentType}`,
-    //   );
-    // }
-    // if (
-    //   methodType === MethodType.Unary ||
-    //   methodType === MethodType.ClientStream
-    // ) {
-    //   const contentLength = response.headers.get('content-length');
-    //   if (contentLength === null) {
-    //     throw new TempoError(
-    //       TempoStatusCode.OUT_OF_RANGE,
-    //       'response did not contain a valid content-length header',
-    //     );
-    //   }
-    //   if (TempoUtil.tryParseInt(contentLength) > this.maxReceiveMessageSize) {
-    //     throw new TempoError(
-    //       TempoStatusCode.OUT_OF_RANGE,
-    //       'response exceeded max receive message size',
-    //     );
-    //   }
-    // }
     // Set incoming metadata from response headers
     const customHeader = response.customMetadata;
-    if (customHeader?.size || 0 > 0) {
-      context.incomingMetadata = this.makeCustomMetaData(metadataHeader);
+    if (customHeader && customHeader?.size || 0 > 0) {
+      context.incomingMetadata = this.makeCustomMetaData(customHeader!);
     }
     const responseCredential = response.credential;
     if (responseCredential) {
@@ -470,22 +437,16 @@ export class TempoWSChannel extends BaseChannel {
         method,
         options,
       );
-      let response: Response;
+      let response: Message;
       // If the retry policy is set, execute the request with retries
       if (options?.retryPolicy) {
         response = await this.executeWithRetry(
           async (retryAttempt: number) => {
             if (retryAttempt > 0) {
-              context.outgoingMetadata.set(
+              requestInit.customMetadata?.set(
                 'tempo-previous-rpc-attempts',
                 String(retryAttempt),
               );
-              if (requestInit.headers instanceof Headers) {
-                requestInit.headers.set(
-                  'custom-metadata',
-                  context.outgoingMetadata.toHttpHeader(),
-                );
-              }
             }
             return await this.fetchData(requestInit);
           },
@@ -496,11 +457,11 @@ export class TempoWSChannel extends BaseChannel {
         // If the deadline is set, execute the request within the deadline
       } else if (options?.deadline) {
         response = await options.deadline.executeWithinDeadline(async () => {
-          return await this.fetchData(requestInit);
+          return await this.fetchUnary(requestInit, options);
         }, options.controller);
       } else {
         // Otherwise, just execute the request indefinitely
-        response = await this.fetchData(requestInit);
+        response = await this.fetchUnary(requestInit, options);
       }
       // Validate response headers
       await this.processResponseHeaders(response, context, method.type);
@@ -508,7 +469,7 @@ export class TempoWSChannel extends BaseChannel {
         await this.hooks.executeResponseHooks(context);
       }
       // Deserialize the response based on the content type
-      const responseData = new Uint8Array(await response.arrayBuffer());
+      const responseData = response.data!
       const record: TResponse = this.deserializeResponse(responseData, method);
       if (this.hooks !== undefined) {
         await this.hooks.executeDecodeHooks(context, record);
@@ -554,24 +515,24 @@ export class TempoWSChannel extends BaseChannel {
     options?: CallOptions | undefined,
   ): Promise<TResponse> {
     try {
-      const transformStream = new TransformStream<Uint8Array, Uint8Array>();
-      tempoStream.writeTempoStream(
-        transformStream.writable,
-        generator(),
-        (payload: TRequest) => this.serializeRequest(payload, method),
-        options?.deadline,
-        options?.controller,
-      );
+      // const transformStream = new TransformStream<Uint8Array, Uint8Array>();
+      // tempoStream.writeTempoStream(
+      //   transformStream.writable,
+      //   generator(),
+      //   (payload: TRequest) => this.serializeRequest(payload, method),
+      //   options?.deadline,
+      //   options?.controller,
+      // );
       if (this.hooks !== undefined) {
         await this.hooks.executeRequestHooks(context);
       }
       const requestInit = await this.createRequest(
-        transformStream.readable,
+        new Uint8Array(),
         context,
         method,
         options,
       );
-      let response: Response;
+      let response: Message
       if (options?.deadline) {
         response = await options.deadline.executeWithinDeadline(async () => {
           return await this.fetchData(requestInit);
@@ -583,7 +544,7 @@ export class TempoWSChannel extends BaseChannel {
       // Validate response headers
       await this.processResponseHeaders(response, context, method.type);
       // Deserialize the response based on the content type
-      const responseData = new Uint8Array(await response.arrayBuffer());
+      const responseData = response.data!;
       const record: TResponse = this.deserializeResponse(responseData, method);
       if (this.hooks !== undefined) {
         await this.hooks.executeDecodeHooks(context, record);
@@ -640,23 +601,22 @@ export class TempoWSChannel extends BaseChannel {
         options,
       );
 
+      const handleRequest = async () => {
+
+      }
+
       let response: Response;
       // If the retry policy is set, execute the request with retries
       if (options?.retryPolicy) {
         response = await this.executeWithRetry(
           async (retryAttempt: number) => {
             if (retryAttempt > 0) {
-              context.outgoingMetadata.set(
+              requestInit.customMetadata?.set(
                 'tempo-previous-rpc-attempts',
                 String(retryAttempt),
               );
-              if (requestInit.headers instanceof Headers) {
-                requestInit.headers.set(
-                  'custom-metadata',
-                  context.outgoingMetadata.toHttpHeader(),
-                );
-              }
             }
+            // todo this.fetchStreams returns readablestream
             return await this.fetchData(requestInit);
           },
           options.retryPolicy,
@@ -747,7 +707,7 @@ export class TempoWSChannel extends BaseChannel {
         await this.hooks.executeRequestHooks(context);
       }
       const requestInit = await this.createRequest(
-        transformStream.readable,
+        new Uint8Array(),
         context,
         method,
         options,

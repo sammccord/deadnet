@@ -1,4 +1,3 @@
-import EventEmitter from 'node:events';
 import { Message } from '@deadnet/bebop';
 import {
   type BebopContentType,
@@ -30,6 +29,12 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
   ServerWebSocket<TEnv>,
   Message
 > {
+  private readonly events = new EventTarget()
+  private readonly clientStreams: Map<
+    string,
+    Promise<any>
+  > = new Map();
+
   constructor(
     logger: TempoLogger,
     registry: ServiceRegistry,
@@ -71,14 +76,6 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
     return await method.invoke(record, context);
   }
 
-  private clientStreams: Map<
-    number,
-    {
-      eventEmitter: EventEmitter;
-      invocation: Promise<any>;
-    }
-  > = new Map();
-
   private async invokeClientStreamMethod(
     request: Message,
     context: ServerContext,
@@ -89,26 +86,26 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
     if (this.hooks !== undefined) {
       await this.hooks.executeRequestHooks(context);
     }
-    const isStreaming = this.clientStreams.has(request.methodId!);
+    const messageId = request.messageId!.toString()
+    const isStreaming = this.clientStreams.has(messageId);
     if (isStreaming) {
-      const { eventEmitter, invocation } = this.clientStreams.get(
-        request.methodId!,
+      const invocation = this.clientStreams.get(
+        messageId,
       )!;
-      eventEmitter.emit('msg', request);
+      this.events.dispatchEvent(new CustomEvent(messageId, { detail: request }))
       return await invocation;
     }
-    const eventEmitter = new EventEmitter();
     const generator = () => {
       return createEventIterator<BebopRecord>(({ emit, cancel }) => {
-        const eventHandler = async (req: Message) => {
+        const eventHandler = async (req: CustomEvent<Message>) => {
           if (this.hooks !== undefined) {
             await this.hooks.executeRequestHooks(context);
           }
-          if (request.status === TempoStatusCode.CANCELLED) {
+          if (req.detail.status === TempoStatusCode.CANCELLED) {
             cancel();
             return;
           }
-          const requestData = req.data!;
+          const requestData = req.detail.data!;
           const record = this.deserializeRequest(
             requestData,
             method,
@@ -120,21 +117,18 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
           emit(record);
         };
 
-        eventEmitter.on('msg', eventHandler);
-        eventEmitter.emit('msg', request);
+        this.events.addEventListener(messageId, eventHandler as unknown as EventListener)
+        this.events.dispatchEvent(new CustomEvent(messageId, { detail: Message }))
 
         return () => {
-          eventEmitter!.off('msg', eventHandler);
-          this.clientStreams.delete(request.methodId!);
+          this.events.removeEventListener(messageId, eventHandler as unknown as EventListener)
+          this.clientStreams.delete(messageId);
         };
       });
     };
-    const payload = {
-      eventEmitter,
-      invocation: method.invoke(generator, context),
-    };
-    this.clientStreams.set(request.methodId!, payload);
-    return await payload.invocation;
+    const invocation = method.invoke(generator, context)
+    this.clientStreams.set(messageId, invocation);
+    return await invocation;
   }
 
   private async invokeServerStreamMethod(
@@ -171,18 +165,18 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
     if (this.hooks !== undefined) {
       await this.hooks.executeRequestHooks(context);
     }
-    const isStreaming = this.clientStreams.has(request.methodId!);
+    const messageId = request.messageId!.toString()
+    const isStreaming = this.clientStreams.has(messageId);
     if (isStreaming) {
-      const { eventEmitter, invocation } = this.clientStreams.get(
-        request.methodId!,
+      const invocation = this.clientStreams.get(
+        messageId,
       )!;
-      eventEmitter.emit('msg', request);
+      this.events.dispatchEvent(new CustomEvent(messageId, { detail: request }))
       return invocation;
     }
-    const eventEmitter = new EventEmitter();
     const generator = () => {
       return createEventIterator<BebopRecord>(({ emit, cancel }) => {
-        const eventHandler = async (req: Message) => {
+        const eventHandler = async (req: CustomEvent<Message>) => {
           if (this.hooks !== undefined) {
             await this.hooks.executeRequestHooks(context);
           }
@@ -190,7 +184,7 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
             cancel();
             return;
           }
-          const requestData = req.data!;
+          const requestData = req.detail.data!;
           const record = this.deserializeRequest(
             requestData,
             method,
@@ -202,16 +196,16 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
           emit(record);
         };
 
-        eventEmitter.on('msg', eventHandler);
-        // emit first event
-        eventEmitter.emit('msg', request);
+        this.events.addEventListener(messageId, eventHandler as unknown as EventListener)
+        this.events.dispatchEvent(new CustomEvent(messageId, { detail: Message }))
 
         return () => {
-          eventEmitter!.off('msg', eventHandler);
-          this.clientStreams.delete(request.methodId!);
+          this.events.removeEventListener(messageId, eventHandler as unknown as EventListener)
+          this.clientStreams.delete(messageId);
         };
       });
     };
+
 
     if (!TempoUtil.isAsyncGeneratorFunction(method.invoke)) {
       throw new TempoError(
@@ -219,15 +213,12 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
         'service method incorrect: method must be async generator',
       );
     }
-    const payload = {
-      eventEmitter,
-      invocation: method.invoke(generator, context),
-    };
-    this.clientStreams.set(request.methodId!, payload);
-    return payload.invocation;
+    const invocation = method.invoke(generator, context)
+    this.clientStreams.set(messageId, invocation);
+    return invocation;
   }
 
-  private makeCustomMetaData(_metadata: Map<string, string[]>): Metadata {
+  private makeCustomMetaData(_metadata: Map<string, string>): Metadata {
     const metadata = new Metadata();
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     (metadata as any).data = _metadata;
@@ -436,7 +427,7 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
         await this.hooks.executeErrorHooks(undefined, e);
       }
       // cleanup any lingering event emitters
-      this.clientStreams.delete(request.methodId!);
+      this.clientStreams.delete(request.messageId!.toString());
       response.status = status;
       response.msg = message;
     }

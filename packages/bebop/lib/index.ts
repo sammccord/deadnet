@@ -33,23 +33,22 @@ export const BEBOP_SCHEMA = new Uint8Array ([
 111, 110, 0, 245, 255, 255, 255, 0, 8, 99, 114, 101, 100,
 101, 110, 116, 105, 97, 108, 0, 245, 255, 255, 255, 0, 9,
 99, 117, 115, 116, 111, 109, 77, 101, 116, 97, 100, 97,
-116, 97, 0, 241, 255, 255, 255, 245, 255, 255, 255, 242,
-255, 255, 255, 0, 245, 255, 255, 255, 0, 10, 72, 101, 108,
-108, 111, 82, 101, 113, 117, 101, 115, 116, 0, 1, 0, 0, 4,
-0, 0, 0, 0, 1, 110, 97, 109, 101, 0, 245, 255, 255, 255,
-0, 72, 101, 108, 108, 111, 82, 101, 115, 112, 111, 110,
-115, 101, 0, 1, 0, 0, 4, 0, 0, 0, 0, 1, 115, 101, 114,
-118, 105, 99, 101, 77, 101, 115, 115, 97, 103, 101, 0,
-245, 255, 255, 255, 0, 1, 0, 0, 0, 71, 114, 101, 101, 116,
-101, 114, 0, 0, 4, 0, 0, 0, 115, 97, 121, 72, 101, 108,
-108, 111, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 85, 246, 254,
-77, 115, 97, 121, 72, 101, 108, 108, 111, 67, 108, 105,
-101, 110, 116, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 196, 25,
-111, 204, 115, 97, 121, 72, 101, 108, 108, 111, 83, 101,
-114, 118, 101, 114, 0, 0, 1, 1, 0, 0, 0, 2, 0, 0, 0, 84,
-166, 66, 202, 115, 97, 121, 72, 101, 108, 108, 111, 68,
-117, 112, 108, 101, 120, 0, 0, 3, 1, 0, 0, 0, 2, 0, 0, 0,
-66, 158, 17, 152
+116, 97, 0, 241, 255, 255, 255, 245, 255, 255, 255, 245,
+255, 255, 255, 0, 10, 72, 101, 108, 108, 111, 82, 101,
+113, 117, 101, 115, 116, 0, 1, 0, 0, 4, 0, 0, 0, 0, 1,
+110, 97, 109, 101, 0, 245, 255, 255, 255, 0, 72, 101, 108,
+108, 111, 82, 101, 115, 112, 111, 110, 115, 101, 0, 1, 0,
+0, 4, 0, 0, 0, 0, 1, 115, 101, 114, 118, 105, 99, 101, 77,
+101, 115, 115, 97, 103, 101, 0, 245, 255, 255, 255, 0, 1,
+0, 0, 0, 71, 114, 101, 101, 116, 101, 114, 0, 0, 4, 0, 0,
+0, 115, 97, 121, 72, 101, 108, 108, 111, 0, 0, 0, 1, 0, 0,
+0, 2, 0, 0, 0, 85, 246, 254, 77, 115, 97, 121, 72, 101,
+108, 108, 111, 67, 108, 105, 101, 110, 116, 0, 0, 2, 1, 0,
+0, 0, 2, 0, 0, 0, 196, 25, 111, 204, 115, 97, 121, 72,
+101, 108, 108, 111, 83, 101, 114, 118, 101, 114, 0, 0, 1,
+1, 0, 0, 0, 2, 0, 0, 0, 84, 166, 66, 202, 115, 97, 121,
+72, 101, 108, 108, 111, 68, 117, 112, 108, 101, 120, 0, 0,
+3, 1, 0, 0, 0, 2, 0, 0, 0, 66, 158, 17, 152
 ]);
 
 export interface IMessage extends BebopRecord {
@@ -72,7 +71,7 @@ export interface IMessage extends BebopRecord {
 
   credential?: string;
 
-  customMetadata?: Map<string, Array<string>>;
+  customMetadata?: Map<string, string>;
 }
 
 export class Message implements IMessage {
@@ -85,7 +84,7 @@ export class Message implements IMessage {
   public msg?: string;
   public authorization?: string;
   public credential?: string;
-  public customMetadata?: Map<string, Array<string>>;
+  public customMetadata?: Map<string, string>;
 
   constructor(record: IMessage) {
     this.methodId = record.methodId;
@@ -153,7 +152,7 @@ export class Message implements IMessage {
       BebopTypeGuard.ensureString(record.credential)
     }
     if (record.customMetadata !== undefined) {
-      BebopTypeGuard.ensureMap(record.customMetadata, BebopTypeGuard.ensureString, (element) => BebopTypeGuard.ensureArray(element, BebopTypeGuard.ensureString));
+      BebopTypeGuard.ensureMap(record.customMetadata, BebopTypeGuard.ensureString, BebopTypeGuard.ensureString);
     }
   }
 
@@ -231,13 +230,7 @@ export class Message implements IMessage {
       view.writeUint32(record.customMetadata.size);
     for (const [k0, v0] of record.customMetadata) {
       view.writeString(k0);
-      {
-        const length1 = v0.length;
-        view.writeUint32(length1);
-        for (let i1 = 0; i1 < length1; i1++) {
-          view.writeString(v0[i1]);
-        }
-      }
+      view.writeString(v0);
     }
     }
     view.writeByte(0);
@@ -301,20 +294,12 @@ export class Message implements IMessage {
         case 10:
           {
         let length0 = view.readUint32();
-        message.customMetadata = new Map<string, Array<string>>();
+        message.customMetadata = new Map<string, string>();
         for (let i0 = 0; i0 < length0; i0++) {
           let k0: string;
-          let v0: Array<string>;
+          let v0: string;
           k0 = view.readString();
-          {
-            let length1 = view.readUint32();
-            v0 = new Array<string>(length1);
-            for (let i1 = 0; i1 < length1; i1++) {
-              let x1: string;
-              x1 = view.readString();
-              v0[i1] = x1;
-            }
-          }
+          v0 = view.readString();
           message.customMetadata.set(k0, v0);
         }
       }

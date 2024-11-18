@@ -14,10 +14,10 @@ const unaryResponse = await client.sayHello({ name: 'World' });
 console.log('Unary response: ', unaryResponse, '\n\n');
 
 // Define an asynchronous generator for client streaming
-const clientGenerator = function* gen() {
-  yield { name: 'A' };
-  yield { name: 'B' };
-  yield { name: 'C' };
+const clientGenerator = async function* gen() {
+  yield await { name: 'A' };
+  yield await { name: 'B' };
+  yield await { name: 'C' };
 };
 
 console.log('----- Sending client stream... -----');
