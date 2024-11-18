@@ -305,13 +305,39 @@ export class TempoWSChannel extends BaseChannel {
   }
 
   // should loop over generator, send all, and resolve on one response
-  private async fetchClientStream(init: Message, generator: AsyncGenerator<BebopRecord, void, undefined>, options?: CallOptions): Promise<Message> { }
+  private async fetchClientStream(init: Message, method: MethodInfo<BebopRecord, BebopRecord>, generator: AsyncGenerator<BebopRecord, void, undefined>, options?: CallOptions): Promise<Message> {
+    const messageId = init.messageId!.toString()
+    const isStreaming = this.clientStreams.has(messageId);
+    return new Promise(async (resolve, reject) => {
+      const listener = (message: CustomEvent<Message>) => {
+        resolve(message.detail)
+        this.events.removeEventListener(messageId, listener as EventListener)
+      }
+      if (options?.controller) {
+        options.controller.signal.addEventListener('abort', () => {
+          this.events.removeEventListener(messageId, listener as EventListener)
+          reject(new TempoError(
+            TempoStatusCode.ABORTED,
+            'RPC fetch aborted',
+            {},
+          ))
+        })
+      }
+      this.events.addEventListener(messageId, listener as EventListener)
+      if (isStreaming) return
+      for await (const value of generator) {
+        this.serializeRequest
+        init.data = method.serialize(value)
+        this.ws.send(this.ws.binaryType === 'blob' ? Message.encodeToJSON(init) : init.encode())
+      }
+    })
+  }
 
   // should send message, then return a createEventIterator from incoming events, stopping on CANCEL
-  private async fetchServerStream(init: Message, options?: CallOptions): AsyncGenerator<BebopRecord, void, undefined> { }
+  private async fetchServerStream(init: Message, method: MethodInfo<BebopRecord, BebopRecord>, options?: CallOptions): AsyncGenerator<BebopRecord, void, undefined> { }
 
   // should do both client and server stream logic
-  private async fetchDuplexStream(init: Message, options?: CallOptions): AsyncGenerator<BebopRecord, void, undefined> { }
+  private async fetchDuplexStream(init: Message, method: MethodInfo<BebopRecord, BebopRecord>, options?: CallOptions): AsyncGenerator<BebopRecord, void, undefined> { }
 
   /**
    * Creates a `RequestInit` object for a given payload, context, method and optional call options.
@@ -427,7 +453,7 @@ export class TempoWSChannel extends BaseChannel {
   ): Promise<TResponse> {
     try {
       // Prepare request data based on content type
-      const requestData: Uint8Array = this.serializeRequest(request, method);
+      const requestData: Uint8Array = method.serialize(request)
       if (this.hooks !== undefined) {
         await this.hooks.executeRequestHooks(context);
       }
@@ -448,7 +474,7 @@ export class TempoWSChannel extends BaseChannel {
                 String(retryAttempt),
               );
             }
-            return await this.fetchData(requestInit);
+            return await this.fetchUnary(requestInit);
           },
           options.retryPolicy,
           options.deadline,
@@ -470,7 +496,7 @@ export class TempoWSChannel extends BaseChannel {
       }
       // Deserialize the response based on the content type
       const responseData = response.data!
-      const record: TResponse = this.deserializeResponse(responseData, method);
+      const record: TResponse = method.deserialize(responseData);
       if (this.hooks !== undefined) {
         await this.hooks.executeDecodeHooks(context, record);
       }
@@ -515,14 +541,6 @@ export class TempoWSChannel extends BaseChannel {
     options?: CallOptions | undefined,
   ): Promise<TResponse> {
     try {
-      // const transformStream = new TransformStream<Uint8Array, Uint8Array>();
-      // tempoStream.writeTempoStream(
-      //   transformStream.writable,
-      //   generator(),
-      //   (payload: TRequest) => this.serializeRequest(payload, method),
-      //   options?.deadline,
-      //   options?.controller,
-      // );
       if (this.hooks !== undefined) {
         await this.hooks.executeRequestHooks(context);
       }
@@ -535,11 +553,11 @@ export class TempoWSChannel extends BaseChannel {
       let response: Message
       if (options?.deadline) {
         response = await options.deadline.executeWithinDeadline(async () => {
-          return await this.fetchData(requestInit);
+          return await this.fetchClientStream(requestInit, method, generator(), options);
         }, options.controller);
       } else {
         // Otherwise, just execute the request indefinitely
-        response = await this.fetchData(requestInit);
+        response = await this.fetchClientStream(requestInit, method, generator(), options);
       }
       // Validate response headers
       await this.processResponseHeaders(response, context, method.type);
@@ -601,11 +619,7 @@ export class TempoWSChannel extends BaseChannel {
         options,
       );
 
-      const handleRequest = async () => {
-
-      }
-
-      let response: Response;
+      let response: AsyncGenerator<BebopRecord, void, undefined>;
       // If the retry policy is set, execute the request with retries
       if (options?.retryPolicy) {
         response = await this.executeWithRetry(
@@ -617,7 +631,7 @@ export class TempoWSChannel extends BaseChannel {
               );
             }
             // todo this.fetchStreams returns readablestream
-            return await this.fetchData(requestInit);
+            return await this.fetchServerStream(requestInit, method, options);
           },
           options.retryPolicy,
           options.deadline,
@@ -626,11 +640,11 @@ export class TempoWSChannel extends BaseChannel {
         // If the deadline is set, execute the request within the deadline
       } else if (options?.deadline) {
         response = await options.deadline.executeWithinDeadline(async () => {
-          return await this.fetchData(requestInit);
+          return await this.fetchServerStream(requestInit, method, options);
         }, options.controller);
       } else {
         // Otherwise, just execute the request indefinitely
-        response = await this.fetchData(requestInit);
+        response = await this.fetchServerStream(requestInit, method, options);
       }
 
       // Validate response headers
