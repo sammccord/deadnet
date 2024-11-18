@@ -14,7 +14,7 @@ import {
   type BebopContentType,
   ConsoleLogger,
   type Credential,
-  type Deadline,
+  Deadline,
   ExecutionEnvironment,
   Metadata,
   type MethodType,
@@ -34,6 +34,7 @@ import {
   WebsocketBuilder,
   WebsocketEvent
 } from 'websocket-ts';
+import { createEventIterator } from './createEventIterator';
 
 export type TempoWSChannelOptions = TempoChannelOptions & {
   binaryType?: BinaryType;
@@ -107,11 +108,11 @@ export class TempoWSChannel extends BaseChannel {
     this.ws.binaryType = options.binaryType || 'arraybuffer';
 
     // Add event listeners
-    this.ws.addEventListener(WebsocketEvent.open, () =>
+    this.ws.addEventListener(WebsocketEvent.open, () => {
       this.logger.debug(
         `opened TempoWSChannel for ${target.href} / ${this.userAgent}`,
-      ),
-    );
+      )
+    });
     this.ws.addEventListener(WebsocketEvent.close, () =>
       this.logger.debug(
         `closed TempoWSChannel for ${target.href} / ${this.userAgent}`,
@@ -300,14 +301,15 @@ export class TempoWSChannel extends BaseChannel {
         })
       }
       this.events.addEventListener(messageId, listener as EventListener)
+      console.log('!!!!!!')
+      this.ws.send('hello')
       this.ws.send(this.ws.binaryType === 'blob' ? Message.encodeToJSON(init) : init.encode())
     })
   }
 
   // should loop over generator, send all, and resolve on one response
-  private async fetchClientStream(init: Message, method: MethodInfo<BebopRecord, BebopRecord>, generator: AsyncGenerator<BebopRecord, void, undefined>, options?: CallOptions): Promise<Message> {
+  private async fetchClientStream(init: Message, method: MethodInfo<BebopRecord, BebopRecord>, generator: () => AsyncGenerator<BebopRecord, void, undefined>, options?: CallOptions): Promise<Message> {
     const messageId = init.messageId!.toString()
-    const isStreaming = this.clientStreams.has(messageId);
     return new Promise(async (resolve, reject) => {
       const listener = (message: CustomEvent<Message>) => {
         resolve(message.detail)
@@ -324,9 +326,7 @@ export class TempoWSChannel extends BaseChannel {
         })
       }
       this.events.addEventListener(messageId, listener as EventListener)
-      if (isStreaming) return
-      for await (const value of generator) {
-        this.serializeRequest
+      for await (const value of generator()) {
         init.data = method.serialize(value)
         this.ws.send(this.ws.binaryType === 'blob' ? Message.encodeToJSON(init) : init.encode())
       }
@@ -334,10 +334,81 @@ export class TempoWSChannel extends BaseChannel {
   }
 
   // should send message, then return a createEventIterator from incoming events, stopping on CANCEL
-  private async fetchServerStream(init: Message, method: MethodInfo<BebopRecord, BebopRecord>, options?: CallOptions): AsyncGenerator<BebopRecord, void, undefined> { }
+  // TODO should cancel on server side when done?
+  private fetchServerStream(init: Message, context: ClientContext, method: MethodInfo<BebopRecord, BebopRecord>, options?: CallOptions): AsyncGenerator<BebopRecord, void, undefined> {
+    const messageId = init.messageId!.toString()
+    return createEventIterator<BebopRecord>(({ emit, cancel }) => {
+      const eventHandler = async (req: CustomEvent<Message>) => {
+        if (req.detail.status === TempoStatusCode.CANCELLED) {
+          cancel();
+          return;
+        }
+        await this.processResponseHeaders(req.detail, context, method.type)
+        const requestData = req.detail.data!;
+        const record = method.deserialize(requestData)
+        if (this.hooks !== undefined) {
+          await this.hooks.executeDecodeHooks(context, record);
+        }
+        emit(record);
+      };
+      if (options?.controller) {
+        options.controller.signal.addEventListener('abort', () => {
+          cancel();
+          throw new TempoError(
+            TempoStatusCode.ABORTED,
+            'RPC fetch aborted',
+            {},
+          )
+        })
+      }
+      this.events.addEventListener(messageId, eventHandler as unknown as EventListener)
+      this.ws.send(this.ws.binaryType === 'blob' ? Message.encodeToJSON(init) : init.encode())
+      return () => {
+        this.events.removeEventListener(messageId, eventHandler as unknown as EventListener)
+        this.clientStreams.delete(messageId);
+      };
+    })
+  }
 
   // should do both client and server stream logic
-  private async fetchDuplexStream(init: Message, method: MethodInfo<BebopRecord, BebopRecord>, options?: CallOptions): AsyncGenerator<BebopRecord, void, undefined> { }
+  private async fetchDuplexStream(init: Message, context: ClientContext, method: MethodInfo<BebopRecord, BebopRecord>, generator: () => AsyncGenerator<BebopRecord, void, undefined>, options?: CallOptions): Promise<AsyncGenerator<BebopRecord, void, undefined>> {
+    const messageId = init.messageId!.toString()
+    const iterator = createEventIterator<BebopRecord>(({ emit, cancel }) => {
+      const eventHandler = async (req: CustomEvent<Message>) => {
+        if (req.detail.status === TempoStatusCode.CANCELLED) {
+          cancel();
+          return;
+        }
+        await this.processResponseHeaders(req.detail, context, method.type)
+        const requestData = req.detail.data!;
+        const record = method.deserialize(requestData)
+        if (this.hooks !== undefined) {
+          await this.hooks.executeDecodeHooks(context, record);
+        }
+        emit(record);
+      };
+      if (options?.controller) {
+        options.controller.signal.addEventListener('abort', () => {
+          cancel();
+          throw new TempoError(
+            TempoStatusCode.ABORTED,
+            'RPC fetch aborted',
+            {},
+          )
+        })
+      }
+      this.events.addEventListener(messageId, eventHandler as unknown as EventListener)
+      return () => {
+        this.events.removeEventListener(messageId, eventHandler as unknown as EventListener)
+        this.clientStreams.delete(messageId);
+      };
+    })
+    for await (const value of generator()) {
+      init.data = method.serialize(value)
+      this.ws.send(this.ws.binaryType === 'blob' ? Message.encodeToJSON(init) : init.encode())
+    }
+    return iterator
+  }
 
   /**
    * Creates a `RequestInit` object for a given payload, context, method and optional call options.
@@ -413,7 +484,7 @@ export class TempoWSChannel extends BaseChannel {
       );
     }
 
-    if (statusCode !== TempoStatusCode.OK) {
+    if (statusCode !== TempoStatusCode.OK && statusCode !== TempoStatusCode.CANCELLED) {
       let tempoMessage = response.msg;
       if (!tempoMessage) {
         tempoMessage = 'unknown error';
@@ -439,6 +510,14 @@ export class TempoWSChannel extends BaseChannel {
     }
   }
 
+  private async waitForOpen(): Promise<void> {
+    if (this.ws.readyState === 0) return
+    await Deadline.after(5, 'seconds').executeWithinDeadline(() => new Promise((resolve, reject) => {
+      this.ws.addEventListener(WebsocketEvent.open, resolve)
+      this.ws.addEventListener(WebsocketEvent.error, reject)
+    }))
+  }
+
   /**
    * {@inheritDoc BaseChannel.startUnary}
    */
@@ -452,6 +531,7 @@ export class TempoWSChannel extends BaseChannel {
     options?: CallOptions | undefined,
   ): Promise<TResponse> {
     try {
+      await this.waitForOpen()
       // Prepare request data based on content type
       const requestData: Uint8Array = method.serialize(request)
       if (this.hooks !== undefined) {
@@ -541,6 +621,7 @@ export class TempoWSChannel extends BaseChannel {
     options?: CallOptions | undefined,
   ): Promise<TResponse> {
     try {
+      await this.waitForOpen()
       if (this.hooks !== undefined) {
         await this.hooks.executeRequestHooks(context);
       }
@@ -553,11 +634,11 @@ export class TempoWSChannel extends BaseChannel {
       let response: Message
       if (options?.deadline) {
         response = await options.deadline.executeWithinDeadline(async () => {
-          return await this.fetchClientStream(requestInit, method, generator(), options);
+          return await this.fetchClientStream(requestInit, method, generator, options);
         }, options.controller);
       } else {
         // Otherwise, just execute the request indefinitely
-        response = await this.fetchClientStream(requestInit, method, generator(), options);
+        response = await this.fetchClientStream(requestInit, method, generator, options);
       }
       // Validate response headers
       await this.processResponseHeaders(response, context, method.type);
@@ -607,8 +688,9 @@ export class TempoWSChannel extends BaseChannel {
     options?: CallOptions | undefined,
   ): Promise<AsyncGenerator<TResponse, void, undefined>> {
     try {
+      await this.waitForOpen()
       // Prepare request data based on content type
-      const requestData: Uint8Array = this.serializeRequest(request, method);
+      const requestData: Uint8Array = method.serialize(request);
       if (this.hooks !== undefined) {
         await this.hooks.executeRequestHooks(context);
       }
@@ -631,7 +713,7 @@ export class TempoWSChannel extends BaseChannel {
               );
             }
             // todo this.fetchStreams returns readablestream
-            return await this.fetchServerStream(requestInit, method, options);
+            return await this.fetchServerStream(requestInit, context, method, options);
           },
           options.retryPolicy,
           options.deadline,
@@ -640,37 +722,13 @@ export class TempoWSChannel extends BaseChannel {
         // If the deadline is set, execute the request within the deadline
       } else if (options?.deadline) {
         response = await options.deadline.executeWithinDeadline(async () => {
-          return await this.fetchServerStream(requestInit, method, options);
+          return await this.fetchServerStream(requestInit, context, method, options);
         }, options.controller);
       } else {
         // Otherwise, just execute the request indefinitely
-        response = await this.fetchServerStream(requestInit, method, options);
+        response = this.fetchServerStream(requestInit, context, method, options);
       }
-
-      // Validate response headers
-      await this.processResponseHeaders(response, context, method.type);
-      if (response.body === null) {
-        throw new TempoError(TempoStatusCode.INTERNAL, 'response body is null');
-      }
-      const body = response.body;
-      return tempoStream.readTempoStream(
-        body,
-        async (buffer: Uint8Array) => {
-          if (buffer.length > this.maxReceiveMessageSize) {
-            throw new TempoError(
-              TempoStatusCode.RESOURCE_EXHAUSTED,
-              `received message larger than ${this.maxReceiveMessageSize} bytes`,
-            );
-          }
-          const record = this.deserializeResponse(buffer, method);
-          if (this.hooks !== undefined) {
-            await this.hooks.executeDecodeHooks(context, record);
-          }
-          return record;
-        },
-        options?.deadline,
-        options?.controller,
-      );
+      return response as AsyncGenerator<TResponse, void, undefined>
     } catch (e) {
       if (this.hooks !== undefined && e instanceof Error) {
         this.hooks.executeErrorHooks(context, e);
@@ -709,6 +767,7 @@ export class TempoWSChannel extends BaseChannel {
     options?: CallOptions | undefined,
   ): Promise<AsyncGenerator<TResponse, void, undefined>> {
     try {
+      await this.waitForOpen()
       const transformStream = new TransformStream<Uint8Array, Uint8Array>();
       tempoStream.writeTempoStream(
         transformStream.writable,
@@ -726,39 +785,17 @@ export class TempoWSChannel extends BaseChannel {
         method,
         options,
       );
-      let response: Response;
+      let response: Promise<AsyncGenerator<BebopRecord, void, undefined>>;
       if (options?.deadline) {
-        response = await options.deadline.executeWithinDeadline(async () => {
-          return await this.fetchData(requestInit);
+        response = options.deadline.executeWithinDeadline(() => {
+          return this.fetchDuplexStream(requestInit, context, method, generator, options);
         }, options.controller);
       } else {
         // Otherwise, just execute the request indefinitely
-        response = await this.fetchData(requestInit);
+        response = this.fetchDuplexStream(requestInit, context, method, generator, options);
       }
       // Validate response headers
-      await this.processResponseHeaders(response, context, method.type);
-      if (response.body === null) {
-        throw new TempoError(TempoStatusCode.INTERNAL, 'response body is null');
-      }
-      const body = response.body;
-      return tempoStream.readTempoStream(
-        body,
-        async (buffer: Uint8Array) => {
-          if (buffer.length > this.maxReceiveMessageSize) {
-            throw new TempoError(
-              TempoStatusCode.RESOURCE_EXHAUSTED,
-              `received message larger than ${this.maxReceiveMessageSize} bytes`,
-            );
-          }
-          const record = this.deserializeResponse(buffer, method);
-          if (this.hooks !== undefined) {
-            await this.hooks.executeDecodeHooks(context, record);
-          }
-          return record;
-        },
-        options?.deadline,
-        options?.controller,
-      );
+      return response as Promise<AsyncGenerator<TResponse, void, undefined>>
     } catch (e) {
       if (this.hooks !== undefined && e instanceof Error) {
         this.hooks.executeErrorHooks(context, e);

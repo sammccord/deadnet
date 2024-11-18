@@ -375,6 +375,13 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
                 true,
               );
             }
+            // cancel the stream
+            response.data = new Uint8Array()
+            response.status = TempoStatusCode.CANCELLED
+            env.send(
+              this.serializeResponse(response, method, contentType),
+              true,
+            );
           };
 
           if (deadline) {

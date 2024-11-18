@@ -1,4 +1,4 @@
-import { TempoServiceRegistry } from '@deadnet/bebop';
+import { Message, TempoServiceRegistry } from '@deadnet/bebop';
 /// <reference lib="deno.ns" />
 import { ConsoleLogger, HookRegistry } from '@tempojs/common';
 import { type ServerContext, TempoRouterConfiguration } from '@tempojs/server';
@@ -25,35 +25,27 @@ router.useHooks(hooks);
 
 const server = Bun.serve<{}>({
   fetch(req, server) {
-    const url = new URL(req.url);
-    if (url.pathname === "/chat") {
-      console.log(`upgrade!`);
-      // const username = getUsernameFromReq(req);
-      const success = server.upgrade(req, { data: {} });
-      return success
-        ? undefined
-        : new Response("WebSocket upgrade error", { status: 400 });
+    // upgrade the request to a WebSocket
+    if (server.upgrade(req)) {
+      return; // do not return a Response
     }
-
-    return new Response("Hello world");
+    return new Response("Upgrade failed", { status: 500 });
   },
   websocket: {
+    perMessageDeflate: true,
     open(ws) {
-      const msg = `${ws.data} has entered the chat`;
-      ws.subscribe("the-group-chat");
-      server.publish("the-group-chat", msg);
+      logger.debug('opened ws connection', ws.data)
     },
     message(ws, message) {
-      // this is a group chat
-      // so the server re-broadcasts incoming message to everyone
-      server.publish("the-group-chat", `${ws.data}: ${message}`);
-      router.process(message,)
+      logger.debug('received ws message', ws.data)
+      router.process(message, new Message({}), ws)
     },
     close(ws) {
-      const msg = `${ws.data} has left the chat`;
-      ws.unsubscribe("the-group-chat");
-      server.publish("the-group-chat", msg);
+      logger.debug('closed ws connection', ws.data)
     },
+    error(ws, error: any) {
+      logger.error(error.message || 'ws failed', { error })
+    }
   },
 });
 
