@@ -1,4 +1,6 @@
-import { Message } from '@deadnet/bebop';
+import type { IMessage } from '@deadnet/bebop/bebop';
+import { Message } from '@deadnet/bebop/bebop';
+import { createEventIterator } from '@deadnet/bebop/createEventIterator';
 import {
   type BebopContentType,
   Deadline,
@@ -21,8 +23,6 @@ import {
 } from '@tempojs/server';
 import type { BebopRecord } from 'bebop';
 import type { ServerWebSocket } from 'bun';
-import type { IMessage } from './../../bebop/lib/index';
-import { createEventIterator } from './createEventIterator';
 
 export class TempoWsRouter<TEnv> extends BaseRouter<
   string | Buffer,
@@ -32,8 +32,10 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
   private readonly events = new EventTarget()
   private readonly clientStreams: Map<
     string,
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     Promise<any>
   > = new Map();
+  private readonly topicStreams: Map<string, AsyncGenerator<BebopRecord, void, unknown>> = new Map()
 
   constructor(
     logger: TempoLogger,
@@ -68,7 +70,7 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
     if (this.hooks !== undefined) {
       await this.hooks.executeRequestHooks(context);
     }
-    const requestData = request.data!;
+    const requestData = new Uint8Array(request.data!);
     const record = this.deserializeRequest(requestData, method, contentType);
     if (this.hooks !== undefined) {
       await this.hooks.executeDecodeHooks(context, record);
@@ -86,7 +88,7 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
     if (this.hooks !== undefined) {
       await this.hooks.executeRequestHooks(context);
     }
-    const messageId = request.messageId!.toString()
+    const messageId = request.messageId!
     const isStreaming = this.clientStreams.has(messageId);
     if (isStreaming) {
       const invocation = this.clientStreams.get(
@@ -105,7 +107,7 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
             cancel();
             return;
           }
-          const requestData = req.detail.data!;
+          const requestData = req.detail.data!
           const record = this.deserializeRequest(
             requestData,
             method,
@@ -118,7 +120,6 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
         };
 
         this.events.addEventListener(messageId, eventHandler as unknown as EventListener)
-        this.events.dispatchEvent(new CustomEvent(messageId, { detail: Message }))
 
         return () => {
           this.events.removeEventListener(messageId, eventHandler as unknown as EventListener)
@@ -128,6 +129,7 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
     };
     const invocation = method.invoke(generator, context)
     this.clientStreams.set(messageId, invocation);
+    this.events.dispatchEvent(new CustomEvent(messageId, { detail: request }))
     return await invocation;
   }
 
@@ -138,6 +140,10 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
     contentType: BebopContentType,
   ): Promise<AsyncGenerator<BebopRecord, void, unknown>> {
     await this.setAuthContext(request, context);
+    // if we are currently streaming to the topic, return it
+    if (request.topic && this.topicStreams.has(request.topic)) {
+      return this.topicStreams.get(request.topic)!
+    }
     if (this.hooks !== undefined) {
       await this.hooks.executeRequestHooks(context);
     }
@@ -152,7 +158,10 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
     if (this.hooks !== undefined) {
       await this.hooks.executeDecodeHooks(context, record);
     }
-    return method.invoke(record, context);
+    const invocation = method.invoke(record, context);
+    // persist the stream
+    if (request.topic) this.topicStreams.set(request.topic, invocation)
+    return invocation
   }
 
   private async invokeDuplexStreamMethod(
@@ -165,15 +174,35 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
     if (this.hooks !== undefined) {
       await this.hooks.executeRequestHooks(context);
     }
-    const messageId = request.messageId!.toString()
-    const isStreaming = this.clientStreams.has(messageId);
-    if (isStreaming) {
-      const invocation = this.clientStreams.get(
-        messageId,
-      )!;
-      this.events.dispatchEvent(new CustomEvent(messageId, { detail: request }))
-      return invocation;
+    const topic = request.topic!
+    const messageId = request.messageId!
+    if (topic) {
+      const isStreaming = this.topicStreams.has(topic);
+      if (isStreaming) {
+        const invocation = this.topicStreams.get(
+          topic,
+        )!;
+        this.events.dispatchEvent(new CustomEvent(topic, { detail: request }))
+        return invocation;
+      }
+    } else {
+      const isStreaming = this.clientStreams.has(messageId);
+      if (isStreaming) {
+        const invocation = this.clientStreams.get(
+          messageId,
+        )!;
+        this.events.dispatchEvent(new CustomEvent(messageId, { detail: request }))
+        return invocation;
+      }
     }
+
+    if (!TempoUtil.isAsyncGeneratorFunction(method.invoke)) {
+      throw new TempoError(
+        TempoStatusCode.INTERNAL,
+        'service method incorrect: method must be async generator',
+      );
+    }
+
     const generator = () => {
       return createEventIterator<BebopRecord>(({ emit, cancel }) => {
         const eventHandler = async (req: CustomEvent<Message>) => {
@@ -195,34 +224,26 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
           }
           emit(record);
         };
-
+        if (topic) {
+          this.events.addEventListener(topic, eventHandler as unknown as EventListener)
+          this.events.dispatchEvent(new CustomEvent(topic, { detail: request }))
+        }
         this.events.addEventListener(messageId, eventHandler as unknown as EventListener)
-        this.events.dispatchEvent(new CustomEvent(messageId, { detail: Message }))
-
+        this.events.dispatchEvent(new CustomEvent(messageId, { detail: request }))
         return () => {
+          if (topic) {
+            this.events.removeEventListener(topic, eventHandler as unknown as EventListener)
+            this.clientStreams.delete(topic);
+          }
           this.events.removeEventListener(messageId, eventHandler as unknown as EventListener)
           this.clientStreams.delete(messageId);
         };
-      });
-    };
-
-
-    if (!TempoUtil.isAsyncGeneratorFunction(method.invoke)) {
-      throw new TempoError(
-        TempoStatusCode.INTERNAL,
-        'service method incorrect: method must be async generator',
-      );
+      })
     }
     const invocation = method.invoke(generator, context)
     this.clientStreams.set(messageId, invocation);
+    if (topic) this.topicStreams.set(topic, invocation)
     return invocation;
-  }
-
-  private makeCustomMetaData(_metadata: Map<string, string>): Metadata {
-    const metadata = new Metadata();
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    (metadata as any).data = _metadata;
-    return metadata;
   }
 
   public override async process(
@@ -253,12 +274,12 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
           `no service is registered which contains a method of '${methodId}'`,
         );
       }
-      const metadataHeader = request.customMetadata;
+      const metadataHeader = request.headers;
       const metadata = metadataHeader
-        ? this.makeCustomMetaData(metadataHeader)
+        ? Metadata.fromHttpHeader(metadataHeader)
         : new Metadata();
 
-      const previousAttempts = request.customMetadata?.get(
+      const previousAttempts = metadata.get(
         'tempo-previous-rpc-attempts',
       );
       if (previousAttempts !== undefined) {
@@ -277,7 +298,7 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
       let deadline: Deadline | undefined;
       const deadlineHeader = request.deadline;
       if (deadlineHeader !== undefined) {
-        deadline = new Deadline(deadlineHeader);
+        deadline = Deadline.fromUnixTimestamp(deadlineHeader)
       }
       if (deadline !== undefined && deadline.isExpired()) {
         throw new TempoError(
@@ -344,7 +365,6 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
               'service method incorrect: unknown method type',
             );
         }
-
         const outgoingCredential = context.outgoingCredential;
         if (outgoingCredential) {
           response.credential = stringifyCredential(outgoingCredential);
@@ -352,7 +372,9 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
         response.methodId = request.methodId;
         response.messageId = request.messageId;
         response.status = TempoStatusCode.OK;
+        response.timestamp = Date.now();
         response.msg = 'OK';
+        response.topic = request.topic
         if (this.hooks !== undefined) {
           await this.hooks.executeResponseHooks(context);
         }
@@ -367,21 +389,17 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
               const responseData = this.serializeResponse(
                 value,
                 method,
-                contentType,
+                'bebop',
               );
-              response.data = responseData;
-              env.send(
-                this.serializeResponse(response, method, contentType),
-                true,
-              );
+              response.data = new Uint8Array(responseData);
+              const encoded = contentType === 'json' ? Message.encodeToJSON(response) : response.encode()
+              env.send(encoded, true)
+              if (response.topic) env.publish(response.topic, encoded, true)
             }
             // cancel the stream
             response.data = new Uint8Array()
             response.status = TempoStatusCode.CANCELLED
-            env.send(
-              this.serializeResponse(response, method, contentType),
-              true,
-            );
+            env.send(contentType === 'json' ? Message.encodeToJSON(response) : response.encode(), true)
           };
 
           if (deadline) {
@@ -401,8 +419,10 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
             method,
             contentType,
           );
-          response.data = responseData;
-          env.send(this.serializeResponse(response, method, contentType), true);
+          response.data = new Uint8Array(responseData);
+          const encoded = contentType === 'json' ? Message.encodeToJSON(response) : response.encode()
+          env.send(encoded, true)
+          if (response.topic) env.publish(response.topic, encoded, true)
         }
       };
       deadline !== undefined
@@ -434,9 +454,10 @@ export class TempoWsRouter<TEnv> extends BaseRouter<
         await this.hooks.executeErrorHooks(undefined, e);
       }
       // cleanup any lingering event emitters
-      this.clientStreams.delete(request.messageId!.toString());
+      this.clientStreams.delete(request.messageId!);
       response.status = status;
       response.msg = message;
+      env.send(contentType === 'json' ? Message.encodeToJSON(response) : response.encode(), true)
     }
   }
 

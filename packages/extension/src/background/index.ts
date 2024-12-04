@@ -1,49 +1,44 @@
-import { GreeterClient } from '@deadnet/bebop';
-import { TempoChannel } from '@tempojs/client';
+import type { IMessage, Message } from '@deadnet/bebop/bebop';
+import { TempoWSChannel } from '@deadnet/bebop/wsChannel';
+import {
+  TempoStatusCode
+} from '@tempojs/common';
+import * as browser from 'webextension-polyfill';
 
 // Establish a connection to the server using TempoChannel
-const channel = TempoChannel.forAddress('http://localhost:3000');
+const channel = TempoWSChannel.forAddress('http://localhost:3000', { reconnect: true });
 
 // Get the GreeterClient from the channel
-const client = channel.getClient(GreeterClient);
+const clientHandlers: Map<string, EventListener> = new Map()
 
 async function main() {
-  console.log('\n\n----- Client is ready and sending unary request... -----');
-
-  // Send a unary request
-  const unaryResponse = await client.sayHello({ name: 'World' });
-  console.log('Unary response: ', unaryResponse, '\n\n');
-
-  // Define an asynchronous generator for client streaming
-  const clientGenerator = async function* gen() {
-    yield { name: 'A' };
-    yield { name: 'B' };
-    yield { name: 'C' };
-  };
-
-  console.log('----- Sending client stream... -----');
-
-  // Send a client stream and print the response
-  const clientStreamResponse = await client.sayHelloClient(clientGenerator);
-  console.log('Client stream response: ', clientStreamResponse, '\n\n');
-
-  console.log('----- Receiving server stream... -----');
-
-  // Receive a server stream and print each payload
-  for await (const payload of await client.sayHelloServer({ name: 'World' })) {
-    console.log('Server stream payload: ', payload);
-  }
-  console.log('\n\nServer stream complete\n\n');
-
-  console.log('----- Sending duplex stream... -----');
-
-  // Send and receive a duplex stream, printing each payload
-  for await (const payload of await client.sayHelloDuplex(clientGenerator)) {
-    console.log('Duplex stream payload: ', payload);
-  }
-  console.log('\n\nDuplex stream complete');
+  browser.runtime.onMessage.addListener(async (msg, sender) => {
+    const message = msg as IMessage
+    if (message.messageId && sender.tab?.id !== undefined) {
+      const tabId = sender.tab.id
+      const messageId = message.messageId
+      const isListening = clientHandlers.has(messageId)
+      if (!isListening) {
+        // listen for incoming events on this message id
+        const listener = (event: CustomEvent<Message>) => {
+          if (event.detail.status === TempoStatusCode.CANCELLED) {
+            channel.events.removeEventListener(messageId, listener as EventListener)
+          }
+          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          ; (event.detail as any).data = Array.apply(null, event.detail.data as any)
+          browser.tabs.sendMessage(tabId, event.detail)
+        }
+        channel.events.addEventListener(messageId, listener as EventListener)
+      }
+      message.data = new Uint8Array(message.data!)
+      channel.send(message)
+    }
+    return undefined
+  });
 }
 
-main()
-  .catch((e) => console.error(e))
+channel
+  .waitForOpen()
+  .then(main)
+  .catch(console.error)
   .then(console.log);

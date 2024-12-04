@@ -3,13 +3,10 @@
   "exclude": ["node_modules"],
   "generators": {
     "ts": {
-      "outFile": "./lib/index.ts"
+      "outFile": "./lib/bebop.ts"
     }
   },
   "watchOptions": {
-    "excludeDirectories": [
-       "node_modules",
-       "lib"
-    ],
+    "excludeDirectories": ["node_modules", "lib"]
   }
 }

@@ -1,0 +1,20 @@
+{
+  "name": "@deadnet/sprites",
+  "module": "index.ts",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsm build.ts && npm run makeSheet && yes | cp -rf dist/sheet.png ../../apps/web/public/",
+    "makeSheet": "TexturePacker --verbose --format pixijs4 --sheet dist/sheet.png --data dist/sheet.json assets",
+    "install": "brew install pkg-config cairo pango libpng jpeg giflib librsvg pixman"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "canvas": "^2.11.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

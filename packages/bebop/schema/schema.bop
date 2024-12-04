@@ -1,14 +1,15 @@
 message Message {
     1 -> uint32 methodId;
-    2 -> guid messageId;
-    3 -> date timestamp;
-    4 -> byte[] data;
-    5 -> date deadline;
-    6 -> byte status;
-    7 -> string msg;
-    8 -> string authorization;
-    9 -> string credential;
-    10 -> map[string, string] customMetadata;
+    2 -> string messageId;
+    3 -> string topic;
+    4 -> int32 timestamp;
+    5 -> byte[] data;
+    6 -> int32 deadline;
+    7 -> byte status;
+    8 -> string msg;
+    9 -> string authorization;
+    10 -> string credential;
+    11 -> string headers;
 }
 
 /**

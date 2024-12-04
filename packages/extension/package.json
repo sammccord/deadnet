@@ -3,19 +3,30 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
-    "dev:firefox": "TARGET=firefox vite dev",
-    "build": "tsc && vite build",
-    "build:firefox": "pnpm i && tsc && TARGET=firefox vite build",
-    "validate": "web-ext lint -s dist"
+    "dev": "STANDALONE=true bunx vite dev",
+    "dev:extension": "TARGET=chrome bunx vite dev",
+    "dev:firefox": "TARGET=firefox bunx vite dev",
+    "build": "tsc && bunx vite build",
+    "build:firefox": "bunx tsc && TARGET=firefox bunx vite build",
+    "validate": "bunx web-ext lint -s dist"
   },
   "dependencies": {
-    "@deadnet/bebop": "workspace:*"
+    "@deadnet/bebop": "workspace:*",
+    "@deadnet/sprites": "workspace:*",
+    "@pixi/unsafe-eval": "^7.4.2",
+    "@tempojs/common": "^0.0.12",
+    "pixi-unsafe": "^8.6.2",
+    "solid-js": "^1.9.3",
+    "solid-pixi-unsafe": "^1.0.1",
+    "webextension-polyfill": "^0.12.0",
+    "websocket-ts": "^2.1.5"
   },
   "devDependencies": {
+    "@types/webextension-polyfill": "^0.12.1",
     "sass": "^1.49.9",
     "typescript": "^5.3.2",
     "vite": "^5.0.0",
+    "vite-plugin-solid": "^2.10.2",
     "vite-plugin-web-extension": "latest"
   }
 }

@@ -1,10 +1,30 @@
 
 [0m[2m[35m$[0m [2m[1mtsc && vite build[0m
-[96mtsconfig.json[0m:[93m6[0m:[93m18[0m - [91merror[0m[90m TS6310: [0mReferenced project '/home/sammccord/work/deadnet/packages/bebop' may not disable emit.
+[96msrc/background/index.ts[0m:[93m1[0m:[93m31[0m - [91merror[0m[90m TS6305: [0mOutput file '/home/sammccord/work/deadnet/packages/bebop/lib/index.d.ts' has not been built from source file '/home/sammccord/work/deadnet/packages/bebop/lib/index.ts'.
 
-[7m6[0m   "references": [{ "path": "../bebop" }]
-[7m [0m [91m                 ~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m1[0m import { GreeterClient } from '@deadnet/bebop';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/background/index.ts[0m:[93m14[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'sayHello' does not exist on type 'BaseClient'.
+
+[7m14[0m   const unaryResponse = await client.sayHello({ name: 'World' });
+[7m  [0m [91m                                     ~~~~~~~~[0m
+
+[96msrc/background/index.ts[0m:[93m27[0m:[93m45[0m - [91merror[0m[90m TS2339: [0mProperty 'sayHelloClient' does not exist on type 'BaseClient'.
+
+[7m27[0m   const clientStreamResponse = await client.sayHelloClient(clientGenerator);
+[7m  [0m [91m                                            ~~~~~~~~~~~~~~[0m
+
+[96msrc/background/index.ts[0m:[93m33[0m:[93m44[0m - [91merror[0m[90m TS2339: [0mProperty 'sayHelloServer' does not exist on type 'BaseClient'.
+
+[7m33[0m   for await (const payload of await client.sayHelloServer({ name: 'World' })) {
+[7m  [0m [91m                                           ~~~~~~~~~~~~~~[0m
+
+[96msrc/background/index.ts[0m:[93m41[0m:[93m44[0m - [91merror[0m[90m TS2339: [0mProperty 'sayHelloDuplex' does not exist on type 'BaseClient'.
+
+[7m41[0m   for await (const payload of await client.sayHelloDuplex(clientGenerator)) {
+[7m  [0m [91m                                           ~~~~~~~~~~~~~~[0m
 
 
-Found 1 error in tsconfig.json[90m:6[0m
+Found 5 errors in the same file, starting at: src/background/index.ts[90m:1[0m
 

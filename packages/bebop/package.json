@@ -1,17 +1,26 @@
 {
   "name": "@deadnet/bebop",
   "type": "module",
-  "module": "./lib/mod.ts",
-  "exports": "./lib/mod.ts",
+  "exports": {
+    "./bebop": "./lib/bebop.ts",
+    "./createDuplexIterator": "./lib/createDuplexIterator.ts",
+    "./createEventIterator": "./lib/createEventIterator.ts",
+    "./extensionChannel": "./lib/extensionChannel.ts",
+    "./wsChannel": "./lib/wsChannel.ts"
+  },
   "scripts": {
-    "build": "bebopc build",
-    "dev": "bebopc build"
+    "build": "./../../node_modules/.bin/bebopc build",
+    "dev": "./../../node_modules/.bin/bebopc build"
   },
   "dependencies": {
     "@tempojs/client": "^0.0.12",
     "@tempojs/common": "^0.0.12",
     "@tempojs/server": "^0.0.12",
     "bebop": "^3.1.3",
+    "webextension-polyfill": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/webextension-polyfill": "^0.12.1",
     "bebop-tools": "^3.1.3"
   }
 }

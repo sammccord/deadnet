@@ -1,5 +1,4 @@
-import { Message, TempoServiceRegistry } from '@deadnet/bebop';
-/// <reference lib="deno.ns" />
+import { Message, TempoServiceRegistry } from '@deadnet/bebop/bebop';
 import { ConsoleLogger, HookRegistry } from '@tempojs/common';
 import { type ServerContext, TempoRouterConfiguration } from '@tempojs/server';
 import { TempoWsRouter } from './router.ts';
@@ -33,6 +32,7 @@ const server = Bun.serve<{}>({
   },
   websocket: {
     perMessageDeflate: true,
+    publishToSelf: false,
     open(ws) {
       logger.debug('opened ws connection', ws.data)
     },
@@ -43,9 +43,6 @@ const server = Bun.serve<{}>({
     close(ws) {
       logger.debug('closed ws connection', ws.data)
     },
-    error(ws, error: any) {
-      logger.error(error.message || 'ws failed', { error })
-    }
   },
 });
 

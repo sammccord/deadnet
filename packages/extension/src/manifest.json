@@ -22,17 +22,34 @@
   },
   "background": {
     "{{chrome}}.service_worker": "background/index.ts",
-    "{{firefox}}.scripts": ["background/index.ts"]
+    "{{firefox}}.scripts": [
+      "background/index.ts"
+    ]
   },
   "{{chrome}}.sandbox": {
-    "pages": ["sandbox/test.html", "sandbox/page2.html"]
+    "pages": [
+      "sandbox/test.html",
+      "sandbox/page2.html"
+    ]
   },
   "content_scripts": [
     {
-      "matches": ["*://*/*"],
-      "js": ["content-scripts/script/index.ts"],
-      "css": ["test.scss"]
+      "matches": [
+        "*://*/*"
+      ],
+      "js": [
+        "content-scripts/script/index.tsx"
+      ],
+      "css": [
+        "test.scss"
+      ],
+      "all_frames": false,
+      "run_at": "document_idle"
     }
   ],
-  "permissions": ["tabs", "{{firefox}}.<all_urls>", "{{chrome}}.activeTab"]
+  "permissions": [
+    "tabs",
+    "{{firefox}}.<all_urls>",
+    "{{chrome}}.activeTab"
+  ]
 }

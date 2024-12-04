@@ -3,7 +3,7 @@ import {
   type IHelloRequest,
   type IHelloResponse,
   TempoServiceRegistry,
-} from '@deadnet/bebop';
+} from '@deadnet/bebop/bebop';
 import type { ServerContext } from '@tempojs/server';
 
 /**
@@ -21,7 +21,7 @@ export class GreeterService extends BaseGreeterService {
    */
   public override async sayHello(
     record: IHelloRequest,
-    context: ServerContext,
+    _context: ServerContext,
   ): Promise<IHelloResponse> {
     return await Promise.resolve({ serviceMessage: `Hello ${record.name}` });
   }
@@ -36,7 +36,7 @@ export class GreeterService extends BaseGreeterService {
    */
   public override async sayHelloClient(
     records: () => AsyncGenerator<IHelloRequest, void, undefined>,
-    context: ServerContext,
+    _context: ServerContext,
   ): Promise<IHelloResponse> {
     let count = 0;
 
@@ -53,12 +53,12 @@ export class GreeterService extends BaseGreeterService {
    * @param context - The server context.
    * @returns - An async generator that yields a series of greeting messages.
    */
-  public override *sayHelloServer(
+  public override async *sayHelloServer(
     record: IHelloRequest,
-    context: ServerContext,
+    _context: ServerContext,
   ): AsyncGenerator<IHelloResponse, void, undefined> {
     for (let i = 0; i < 10; i++) {
-      yield { serviceMessage: `Hello ${record.name} / ${i}` };
+      yield await { serviceMessage: `Hello ${record.name} / ${i}` };
     }
   }
 
@@ -72,7 +72,7 @@ export class GreeterService extends BaseGreeterService {
    */
   public override async *sayHelloDuplex(
     records: () => AsyncGenerator<IHelloRequest, void, undefined>,
-    context: ServerContext,
+    _context: ServerContext,
   ): AsyncGenerator<IHelloResponse, void, undefined> {
     for await (const value of records()) {
       yield { serviceMessage: `Hello ${value.name}` };
