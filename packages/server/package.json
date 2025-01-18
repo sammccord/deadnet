@@ -3,8 +3,8 @@
   "module": "lib/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun --hot run lib/index.ts",
-    "build": "bun build ./lib/index.ts --minify --target=bun --outfile dist/index.js"
+    "dev": "bun --hot run src/index.ts",
+    "build": "bun build ./src/index.ts --minify --target=bun --outfile dist/index.js"
   },
   "dependencies": {
     "@deadnet/bebop": "workspace:*",

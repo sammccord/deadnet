@@ -1,0 +1,69 @@
+const uint32 EntityCapacity = 65535;
+
+message GameConfig {
+  1 -> string id;
+  2 -> Point size;
+  3 -> Point tileSize;
+  4 -> System[] systems;
+}
+
+message GameState {
+  1 -> GameMode mode;
+  2 -> bool initialized;
+}
+
+enum GameMode {
+  CREATIVE = 1;
+  SURVIVAL = 2;
+}
+
+struct Player {
+  string id;
+}
+
+message Entity {
+	1 -> uint32 id;
+	2 -> uint32 parent;
+	3 -> uint32[] children;
+	4 -> int32 tags;
+  5 -> Point position;
+  6 -> Sprite sprite;
+  7 -> Pool mana;
+  8 -> string name;
+  9 -> bool ticking;
+  10 -> string player;
+  11 -> Geometry geometry;
+}
+
+struct Geometry {
+  Point dimensions;
+  uint16[] topology;
+}
+
+struct Point {
+  uint16 x;
+  uint16 y;
+  uint16 z;
+}
+
+struct Pool {
+	uint32 points;
+	uint32 min;
+	uint32 max;
+	uint32 rate;
+  uint32 intervalMs;
+}
+
+message Sprite {
+	1 -> string url;
+	2 -> string texture;
+}
+
+union System {
+  1 -> struct BasicChargeParams {
+    // components to include in the archetype in addition to mana and ticking
+    byte[] query;
+    // the pool component to target, defaults to mana
+    byte pool;
+	}
+}

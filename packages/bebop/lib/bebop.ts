@@ -14,41 +14,86 @@
 //     Changes to this file may cause incorrect behavior and will be lost if
 //     the code is regenerated.
 // </auto-generated>
-import { BebopView, BebopRuntimeError, type BebopRecord, BebopJson, BebopTypeGuard, Guid, GuidMap } from "bebop";
+import { BebopView, BebopRuntimeError, BebopRecord, BebopJson, BebopTypeGuard, Guid, GuidMap } from "bebop";
 import { Metadata, MethodType } from "@tempojs/common";
-import { BaseClient, type MethodInfo, type CallOptions } from "@tempojs/client";
-import { ServiceRegistry, BaseService, ServerContext, type BebopMethodAny, type BebopMethod } from "@tempojs/server";
+import {  BaseClient, MethodInfo, CallOptions } from "@tempojs/client";
+import { ServiceRegistry, BaseService, ServerContext, BebopMethodAny, BebopMethod } from "@tempojs/server";
 
-export const BEBOP_SCHEMA = new Uint8Array([
-  3, 3, 0, 0, 0, 77, 101, 115, 115, 97, 103, 101, 0, 2, 0,
-  5, 0, 0, 0, 11, 109, 101, 116, 104, 111, 100, 73, 100, 0,
-  251, 255, 255, 255, 0, 1, 109, 101, 115, 115, 97, 103,
-  101, 73, 100, 0, 245, 255, 255, 255, 0, 2, 116, 111, 112,
-  105, 99, 0, 245, 255, 255, 255, 0, 3, 116, 105, 109, 101,
-  115, 116, 97, 109, 112, 0, 250, 255, 255, 255, 0, 4, 100,
-  97, 116, 97, 0, 242, 255, 255, 255, 0, 254, 255, 255, 255,
-  0, 5, 100, 101, 97, 100, 108, 105, 110, 101, 0, 250, 255,
-  255, 255, 0, 6, 115, 116, 97, 116, 117, 115, 0, 254, 255,
-  255, 255, 0, 7, 109, 115, 103, 0, 245, 255, 255, 255, 0,
-  8, 97, 117, 116, 104, 111, 114, 105, 122, 97, 116, 105,
-  111, 110, 0, 245, 255, 255, 255, 0, 9, 99, 114, 101, 100,
-  101, 110, 116, 105, 97, 108, 0, 245, 255, 255, 255, 0, 10,
-  104, 101, 97, 100, 101, 114, 115, 0, 245, 255, 255, 255,
-  0, 11, 72, 101, 108, 108, 111, 82, 101, 113, 117, 101,
-  115, 116, 0, 1, 0, 0, 4, 0, 0, 0, 0, 1, 110, 97, 109, 101,
-  0, 245, 255, 255, 255, 0, 72, 101, 108, 108, 111, 82, 101,
-  115, 112, 111, 110, 115, 101, 0, 1, 0, 0, 4, 0, 0, 0, 0,
-  1, 115, 101, 114, 118, 105, 99, 101, 77, 101, 115, 115,
-  97, 103, 101, 0, 245, 255, 255, 255, 0, 1, 0, 0, 0, 71,
-  114, 101, 101, 116, 101, 114, 0, 0, 4, 0, 0, 0, 115, 97,
-  121, 72, 101, 108, 108, 111, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0,
-  0, 85, 246, 254, 77, 115, 97, 121, 72, 101, 108, 108, 111,
-  67, 108, 105, 101, 110, 116, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0,
-  0, 196, 25, 111, 204, 115, 97, 121, 72, 101, 108, 108,
-  111, 83, 101, 114, 118, 101, 114, 0, 0, 1, 1, 0, 0, 0, 2,
-  0, 0, 0, 84, 166, 66, 202, 115, 97, 121, 72, 101, 108,
-  108, 111, 68, 117, 112, 108, 101, 120, 0, 0, 3, 1, 0, 0,
-  0, 2, 0, 0, 0, 66, 158, 17, 152
+export const BEBOP_SCHEMA = new Uint8Array ([
+3, 14, 0, 0, 0, 77, 101, 115, 115, 97, 103, 101, 0, 2, 0,
+5, 0, 0, 0, 11, 109, 101, 116, 104, 111, 100, 73, 100, 0,
+251, 255, 255, 255, 0, 1, 109, 101, 115, 115, 97, 103,
+101, 73, 100, 0, 245, 255, 255, 255, 0, 2, 116, 111, 112,
+105, 99, 0, 245, 255, 255, 255, 0, 3, 116, 105, 109, 101,
+115, 116, 97, 109, 112, 0, 250, 255, 255, 255, 0, 4, 100,
+97, 116, 97, 0, 242, 255, 255, 255, 0, 254, 255, 255, 255,
+0, 5, 100, 101, 97, 100, 108, 105, 110, 101, 0, 250, 255,
+255, 255, 0, 6, 115, 116, 97, 116, 117, 115, 0, 254, 255,
+255, 255, 0, 7, 109, 115, 103, 0, 245, 255, 255, 255, 0,
+8, 97, 117, 116, 104, 111, 114, 105, 122, 97, 116, 105,
+111, 110, 0, 245, 255, 255, 255, 0, 9, 99, 114, 101, 100,
+101, 110, 116, 105, 97, 108, 0, 245, 255, 255, 255, 0, 10,
+104, 101, 97, 100, 101, 114, 115, 0, 245, 255, 255, 255,
+0, 11, 72, 101, 108, 108, 111, 82, 101, 113, 117, 101,
+115, 116, 0, 1, 0, 0, 4, 0, 0, 0, 0, 1, 110, 97, 109, 101,
+0, 245, 255, 255, 255, 0, 72, 101, 108, 108, 111, 82, 101,
+115, 112, 111, 110, 115, 101, 0, 1, 0, 0, 4, 0, 0, 0, 0,
+1, 115, 101, 114, 118, 105, 99, 101, 77, 101, 115, 115,
+97, 103, 101, 0, 245, 255, 255, 255, 0, 71, 97, 109, 101,
+67, 111, 110, 102, 105, 103, 0, 2, 0, 5, 0, 0, 0, 4, 105,
+100, 0, 245, 255, 255, 255, 0, 1, 115, 105, 122, 101, 0,
+9, 0, 0, 0, 0, 2, 116, 105, 108, 101, 83, 105, 122, 101,
+0, 9, 0, 0, 0, 0, 3, 115, 121, 115, 116, 101, 109, 115, 0,
+242, 255, 255, 255, 0, 13, 0, 0, 0, 0, 4, 71, 97, 109,
+101, 83, 116, 97, 116, 101, 0, 2, 0, 5, 0, 0, 0, 2, 109,
+111, 100, 101, 0, 5, 0, 0, 0, 0, 1, 105, 110, 105, 116,
+105, 97, 108, 105, 122, 101, 100, 0, 255, 255, 255, 255,
+0, 2, 71, 97, 109, 101, 77, 111, 100, 101, 0, 4, 0, 251,
+255, 255, 255, 0, 4, 0, 0, 0, 2, 67, 82, 69, 65, 84, 73,
+86, 69, 0, 0, 1, 0, 0, 0, 83, 85, 82, 86, 73, 86, 65, 76,
+0, 0, 2, 0, 0, 0, 80, 108, 97, 121, 101, 114, 0, 1, 0, 0,
+4, 0, 0, 0, 0, 1, 105, 100, 0, 245, 255, 255, 255, 0, 69,
+110, 116, 105, 116, 121, 0, 2, 0, 5, 0, 0, 0, 11, 105,
+100, 0, 251, 255, 255, 255, 0, 1, 112, 97, 114, 101, 110,
+116, 0, 251, 255, 255, 255, 0, 2, 99, 104, 105, 108, 100,
+114, 101, 110, 0, 242, 255, 255, 255, 0, 251, 255, 255,
+255, 0, 3, 116, 97, 103, 115, 0, 250, 255, 255, 255, 0, 4,
+112, 111, 115, 105, 116, 105, 111, 110, 0, 9, 0, 0, 0, 0,
+5, 115, 112, 114, 105, 116, 101, 0, 11, 0, 0, 0, 0, 6,
+109, 97, 110, 97, 0, 10, 0, 0, 0, 0, 7, 110, 97, 109, 101,
+0, 245, 255, 255, 255, 0, 8, 116, 105, 99, 107, 105, 110,
+103, 0, 255, 255, 255, 255, 0, 9, 112, 108, 97, 121, 101,
+114, 0, 245, 255, 255, 255, 0, 10, 103, 101, 111, 109,
+101, 116, 114, 121, 0, 8, 0, 0, 0, 0, 11, 71, 101, 111,
+109, 101, 116, 114, 121, 0, 1, 0, 0, 10, 0, 0, 0, 0, 2,
+100, 105, 109, 101, 110, 115, 105, 111, 110, 115, 0, 9, 0,
+0, 0, 0, 116, 111, 112, 111, 108, 111, 103, 121, 0, 242,
+255, 255, 255, 0, 253, 255, 255, 255, 0, 80, 111, 105,
+110, 116, 0, 1, 0, 0, 6, 0, 0, 0, 1, 3, 120, 0, 253, 255,
+255, 255, 0, 121, 0, 253, 255, 255, 255, 0, 122, 0, 253,
+255, 255, 255, 0, 80, 111, 111, 108, 0, 1, 0, 0, 20, 0, 0,
+0, 1, 5, 112, 111, 105, 110, 116, 115, 0, 251, 255, 255,
+255, 0, 109, 105, 110, 0, 251, 255, 255, 255, 0, 109, 97,
+120, 0, 251, 255, 255, 255, 0, 114, 97, 116, 101, 0, 251,
+255, 255, 255, 0, 105, 110, 116, 101, 114, 118, 97, 108,
+77, 115, 0, 251, 255, 255, 255, 0, 83, 112, 114, 105, 116,
+101, 0, 2, 0, 5, 0, 0, 0, 2, 117, 114, 108, 0, 245, 255,
+255, 255, 0, 1, 116, 101, 120, 116, 117, 114, 101, 0, 245,
+255, 255, 255, 0, 2, 66, 97, 115, 105, 99, 67, 104, 97,
+114, 103, 101, 80, 97, 114, 97, 109, 115, 0, 1, 0, 0, 5,
+0, 0, 0, 0, 2, 113, 117, 101, 114, 121, 0, 242, 255, 255,
+255, 0, 254, 255, 255, 255, 0, 112, 111, 111, 108, 0, 254,
+255, 255, 255, 0, 83, 121, 115, 116, 101, 109, 0, 3, 0,
+10, 0, 0, 0, 1, 1, 12, 0, 0, 0, 1, 0, 0, 0, 71, 114, 101,
+101, 116, 101, 114, 0, 0, 4, 0, 0, 0, 115, 97, 121, 72,
+101, 108, 108, 111, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 85,
+246, 254, 77, 115, 97, 121, 72, 101, 108, 108, 111, 67,
+108, 105, 101, 110, 116, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0,
+196, 25, 111, 204, 115, 97, 121, 72, 101, 108, 108, 111,
+83, 101, 114, 118, 101, 114, 0, 0, 1, 1, 0, 0, 0, 2, 0, 0,
+0, 84, 166, 66, 202, 115, 97, 121, 72, 101, 108, 108, 111,
+68, 117, 112, 108, 101, 120, 0, 0, 3, 1, 0, 0, 0, 2, 0, 0,
+0, 66, 158, 17, 152
 ]);
 
 export interface IMessage extends BebopRecord {
@@ -167,7 +212,7 @@ export class Message implements IMessage {
    * Unsafely creates an instance of {@link Message} from the specified dynamic object. No type checking is performed.
    */
   public static unsafeCast(record: any): IMessage {
-    return new Message(record);
+      return new Message(record);
   }
 
   /**
@@ -363,7 +408,7 @@ export class HelloRequest implements IHelloRequest {
    * Unsafely creates an instance of {@link HelloRequest} from the specified dynamic object. No type checking is performed.
    */
   public static unsafeCast(record: any): IHelloRequest {
-    return new HelloRequest(record);
+      return new HelloRequest(record);
   }
 
   /**
@@ -460,7 +505,7 @@ export class HelloResponse implements IHelloResponse {
    * Unsafely creates an instance of {@link HelloResponse} from the specified dynamic object. No type checking is performed.
    */
   public static unsafeCast(record: any): IHelloResponse {
-    return new HelloResponse(record);
+      return new HelloResponse(record);
   }
 
   /**
@@ -511,6 +556,1439 @@ export class HelloResponse implements IHelloResponse {
 /**
  * `Greeter` is a service that provides a method for generating greeting messages.
  */
+
+export const EntityCapacity: number = 65535;
+
+
+export interface IGameConfig extends BebopRecord {
+
+  id?: string;
+
+  size?: IPoint;
+
+  tileSize?: IPoint;
+
+  systems?: Array<System>;
+}
+
+export class GameConfig implements IGameConfig {
+  public id?: string;
+  public size?: IPoint;
+  public tileSize?: IPoint;
+  public systems?: Array<System>;
+
+  constructor(record: IGameConfig) {
+    this.id = record.id;
+    this.size = record.size;
+    this.tileSize = record.tileSize;
+    this.systems = record.systems;
+  }
+
+  /**
+   * Serializes the current instance into a JSON-Over-Bebop string
+   */
+  public stringify(): string {
+    return GameConfig.encodeToJSON(this);
+  }
+
+  /**
+   * Serializes the specified object into a JSON-Over-Bebop string
+   */
+  public static encodeToJSON(record: IGameConfig): string {
+    return JSON.stringify(record, BebopJson.replacer);
+  }
+
+  /**
+   * Validates that the runtime types of members in the current instance are correct.
+   */
+  public validateTypes(): void {
+    GameConfig.validateCompatibility(this);
+  }
+
+  /**
+   * Validates that the specified dynamic object can become an instance of {@link GameConfig}.
+   */
+  public static validateCompatibility(record: IGameConfig): void {
+    if (record.id !== undefined) {
+      BebopTypeGuard.ensureString(record.id)
+    }
+    if (record.size !== undefined) {
+      Point.validateCompatibility(record.size);
+    }
+    if (record.tileSize !== undefined) {
+      Point.validateCompatibility(record.tileSize);
+    }
+    if (record.systems !== undefined) {
+      BebopTypeGuard.ensureArray(record.systems, System.validateCompatibility);
+    }
+  }
+
+  /**
+   * Unsafely creates an instance of {@link GameConfig} from the specified dynamic object. No type checking is performed.
+   */
+  public static unsafeCast(record: any): IGameConfig {
+      if (record.size !== undefined) {
+        record.size = Point.unsafeCast(record.size);
+      }
+      if (record.tileSize !== undefined) {
+        record.tileSize = Point.unsafeCast(record.tileSize);
+      }
+      return new GameConfig(record);
+  }
+
+  /**
+   * Creates a new {@link GameConfig} instance from a JSON-Over-Bebop string. Type checking is performed.
+   */
+  public static fromJSON(json: string): IGameConfig {
+    if (typeof json !== 'string' || json.trim().length === 0) {
+      throw new BebopRuntimeError(`GameConfig.fromJSON: expected string`);
+    }
+    const parsed = JSON.parse(json, BebopJson.reviver);
+    GameConfig.validateCompatibility(parsed);
+    return GameConfig.unsafeCast(parsed);
+  }
+  public encode(): Uint8Array {
+    return GameConfig.encode(this);
+  }
+
+  public static encode(record: IGameConfig): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    GameConfig.encodeInto(record, view);
+    return view.toArray();
+  }
+
+  public static encodeInto(record: IGameConfig, view: BebopView): number {
+    const before = view.length;
+    const pos = view.reserveMessageLength();
+    const start = view.length;
+    if (record.id !== undefined) {
+      view.writeByte(1);
+      view.writeString(record.id);
+    }
+    if (record.size !== undefined) {
+      view.writeByte(2);
+      Point.encodeInto(record.size, view)
+    }
+    if (record.tileSize !== undefined) {
+      view.writeByte(3);
+      Point.encodeInto(record.tileSize, view)
+    }
+    if (record.systems !== undefined) {
+      view.writeByte(4);
+      {
+      const length0 = record.systems.length;
+      view.writeUint32(length0);
+      for (let i0 = 0; i0 < length0; i0++) {
+        System.encodeInto(record.systems[i0], view)
+      }
+    }
+    }
+    view.writeByte(0);
+    const end = view.length;
+    view.fillMessageLength(pos, end - start);
+    const after = view.length;
+    return after - before;
+  }
+
+  public static decode(buffer: Uint8Array): IGameConfig {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return GameConfig.readFrom(view);
+  }
+
+  public static readFrom(view: BebopView): IGameConfig {
+    let message: IGameConfig = {};
+    const length = view.readMessageLength();
+    const end = view.index + length;
+    while (true) {
+      switch (view.readByte()) {
+        case 0:
+          return new GameConfig(message);
+
+        case 1:
+          message.id = view.readString();
+          break;
+
+        case 2:
+          message.size = Point.readFrom(view);
+          break;
+
+        case 3:
+          message.tileSize = Point.readFrom(view);
+          break;
+
+        case 4:
+          {
+        let length0 = view.readUint32();
+        message.systems = new Array<System>(length0);
+        for (let i0 = 0; i0 < length0; i0++) {
+          let x0: System;
+          x0 = System.readFrom(view);
+          message.systems[i0] = x0;
+        }
+      }
+          break;
+
+        default:
+          view.index = end;
+          return new GameConfig(message);
+      }
+    }
+  }
+}
+
+
+export interface IGameState extends BebopRecord {
+
+  mode?: GameMode;
+
+  initialized?: boolean;
+}
+
+export class GameState implements IGameState {
+  public mode?: GameMode;
+  public initialized?: boolean;
+
+  constructor(record: IGameState) {
+    this.mode = record.mode;
+    this.initialized = record.initialized;
+  }
+
+  /**
+   * Serializes the current instance into a JSON-Over-Bebop string
+   */
+  public stringify(): string {
+    return GameState.encodeToJSON(this);
+  }
+
+  /**
+   * Serializes the specified object into a JSON-Over-Bebop string
+   */
+  public static encodeToJSON(record: IGameState): string {
+    return JSON.stringify(record, BebopJson.replacer);
+  }
+
+  /**
+   * Validates that the runtime types of members in the current instance are correct.
+   */
+  public validateTypes(): void {
+    GameState.validateCompatibility(this);
+  }
+
+  /**
+   * Validates that the specified dynamic object can become an instance of {@link GameState}.
+   */
+  public static validateCompatibility(record: IGameState): void {
+    if (record.mode !== undefined) {
+      BebopTypeGuard.ensureEnum(record.mode, GameMode);
+    }
+    if (record.initialized !== undefined) {
+      BebopTypeGuard.ensureBoolean(record.initialized)
+    }
+  }
+
+  /**
+   * Unsafely creates an instance of {@link GameState} from the specified dynamic object. No type checking is performed.
+   */
+  public static unsafeCast(record: any): IGameState {
+      return new GameState(record);
+  }
+
+  /**
+   * Creates a new {@link GameState} instance from a JSON-Over-Bebop string. Type checking is performed.
+   */
+  public static fromJSON(json: string): IGameState {
+    if (typeof json !== 'string' || json.trim().length === 0) {
+      throw new BebopRuntimeError(`GameState.fromJSON: expected string`);
+    }
+    const parsed = JSON.parse(json, BebopJson.reviver);
+    GameState.validateCompatibility(parsed);
+    return GameState.unsafeCast(parsed);
+  }
+  public encode(): Uint8Array {
+    return GameState.encode(this);
+  }
+
+  public static encode(record: IGameState): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    GameState.encodeInto(record, view);
+    return view.toArray();
+  }
+
+  public static encodeInto(record: IGameState, view: BebopView): number {
+    const before = view.length;
+    const pos = view.reserveMessageLength();
+    const start = view.length;
+    if (record.mode !== undefined) {
+      view.writeByte(1);
+      view.writeUint32(record.mode);
+    }
+    if (record.initialized !== undefined) {
+      view.writeByte(2);
+      view.writeByte(Number(record.initialized));
+    }
+    view.writeByte(0);
+    const end = view.length;
+    view.fillMessageLength(pos, end - start);
+    const after = view.length;
+    return after - before;
+  }
+
+  public static decode(buffer: Uint8Array): IGameState {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return GameState.readFrom(view);
+  }
+
+  public static readFrom(view: BebopView): IGameState {
+    let message: IGameState = {};
+    const length = view.readMessageLength();
+    const end = view.index + length;
+    while (true) {
+      switch (view.readByte()) {
+        case 0:
+          return new GameState(message);
+
+        case 1:
+          message.mode = view.readUint32() as GameMode;
+          break;
+
+        case 2:
+          message.initialized = !!view.readByte();
+          break;
+
+        default:
+          view.index = end;
+          return new GameState(message);
+      }
+    }
+  }
+}
+
+
+export enum GameMode {
+
+  Creative = 1,
+
+  Survival = 2,
+}
+
+
+export interface IPlayer extends BebopRecord {
+
+  readonly id: string;
+}
+
+export class Player implements IPlayer {
+  public readonly id: string;
+
+  constructor(record: IPlayer) {
+    this.id = record.id;
+  }
+
+  /**
+   * Serializes the current instance into a JSON-Over-Bebop string
+   */
+  public stringify(): string {
+    return Player.encodeToJSON(this);
+  }
+
+  /**
+   * Serializes the specified object into a JSON-Over-Bebop string
+   */
+  public static encodeToJSON(record: IPlayer): string {
+    return JSON.stringify(record, BebopJson.replacer);
+  }
+
+  /**
+   * Validates that the runtime types of members in the current instance are correct.
+   */
+  public validateTypes(): void {
+    Player.validateCompatibility(this);
+  }
+
+  /**
+   * Validates that the specified dynamic object can become an instance of {@link Player}.
+   */
+  public static validateCompatibility(record: IPlayer): void {
+    BebopTypeGuard.ensureString(record.id)
+  }
+
+  /**
+   * Unsafely creates an instance of {@link Player} from the specified dynamic object. No type checking is performed.
+   */
+  public static unsafeCast(record: any): IPlayer {
+      return new Player(record);
+  }
+
+  /**
+   * Creates a new {@link Player} instance from a JSON-Over-Bebop string. Type checking is performed.
+   */
+  public static fromJSON(json: string): IPlayer {
+    if (typeof json !== 'string' || json.trim().length === 0) {
+      throw new BebopRuntimeError(`Player.fromJSON: expected string`);
+    }
+    const parsed = JSON.parse(json, BebopJson.reviver);
+    Player.validateCompatibility(parsed);
+    return Player.unsafeCast(parsed);
+  }
+  public encode(): Uint8Array {
+    return Player.encode(this);
+  }
+
+  public static encode(record: IPlayer): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    Player.encodeInto(record, view);
+    return view.toArray();
+  }
+
+  public static encodeInto(record: IPlayer, view: BebopView): number {
+    const before = view.length;
+    view.writeString(record.id);
+    const after = view.length;
+    return after - before;
+  }
+
+  public static decode(buffer: Uint8Array): IPlayer {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return Player.readFrom(view);
+  }
+
+  public static readFrom(view: BebopView): IPlayer {
+    let field0: string;
+    field0 = view.readString();
+    let message: IPlayer = {
+      id: field0,
+    };
+    return new Player(message);
+  }
+}
+
+
+export interface IEntity extends BebopRecord {
+
+  id?: number;
+
+  parent?: number;
+
+  children?: Array<number>;
+
+  tags?: number;
+
+  position?: IPoint;
+
+  sprite?: ISprite;
+
+  mana?: IPool;
+
+  name?: string;
+
+  ticking?: boolean;
+
+  player?: string;
+
+  geometry?: IGeometry;
+}
+
+export class Entity implements IEntity {
+  public id?: number;
+  public parent?: number;
+  public children?: Array<number>;
+  public tags?: number;
+  public position?: IPoint;
+  public sprite?: ISprite;
+  public mana?: IPool;
+  public name?: string;
+  public ticking?: boolean;
+  public player?: string;
+  public geometry?: IGeometry;
+
+  constructor(record: IEntity) {
+    this.id = record.id;
+    this.parent = record.parent;
+    this.children = record.children;
+    this.tags = record.tags;
+    this.position = record.position;
+    this.sprite = record.sprite;
+    this.mana = record.mana;
+    this.name = record.name;
+    this.ticking = record.ticking;
+    this.player = record.player;
+    this.geometry = record.geometry;
+  }
+
+  /**
+   * Serializes the current instance into a JSON-Over-Bebop string
+   */
+  public stringify(): string {
+    return Entity.encodeToJSON(this);
+  }
+
+  /**
+   * Serializes the specified object into a JSON-Over-Bebop string
+   */
+  public static encodeToJSON(record: IEntity): string {
+    return JSON.stringify(record, BebopJson.replacer);
+  }
+
+  /**
+   * Validates that the runtime types of members in the current instance are correct.
+   */
+  public validateTypes(): void {
+    Entity.validateCompatibility(this);
+  }
+
+  /**
+   * Validates that the specified dynamic object can become an instance of {@link Entity}.
+   */
+  public static validateCompatibility(record: IEntity): void {
+    if (record.id !== undefined) {
+      BebopTypeGuard.ensureUint32(record.id)
+    }
+    if (record.parent !== undefined) {
+      BebopTypeGuard.ensureUint32(record.parent)
+    }
+    if (record.children !== undefined) {
+      BebopTypeGuard.ensureArray(record.children, BebopTypeGuard.ensureUint32);
+    }
+    if (record.tags !== undefined) {
+      BebopTypeGuard.ensureInt32(record.tags)
+    }
+    if (record.position !== undefined) {
+      Point.validateCompatibility(record.position);
+    }
+    if (record.sprite !== undefined) {
+      Sprite.validateCompatibility(record.sprite);
+    }
+    if (record.mana !== undefined) {
+      Pool.validateCompatibility(record.mana);
+    }
+    if (record.name !== undefined) {
+      BebopTypeGuard.ensureString(record.name)
+    }
+    if (record.ticking !== undefined) {
+      BebopTypeGuard.ensureBoolean(record.ticking)
+    }
+    if (record.player !== undefined) {
+      BebopTypeGuard.ensureString(record.player)
+    }
+    if (record.geometry !== undefined) {
+      Geometry.validateCompatibility(record.geometry);
+    }
+  }
+
+  /**
+   * Unsafely creates an instance of {@link Entity} from the specified dynamic object. No type checking is performed.
+   */
+  public static unsafeCast(record: any): IEntity {
+      if (record.position !== undefined) {
+        record.position = Point.unsafeCast(record.position);
+      }
+      if (record.sprite !== undefined) {
+        record.sprite = Sprite.unsafeCast(record.sprite);
+      }
+      if (record.mana !== undefined) {
+        record.mana = Pool.unsafeCast(record.mana);
+      }
+      if (record.geometry !== undefined) {
+        record.geometry = Geometry.unsafeCast(record.geometry);
+      }
+      return new Entity(record);
+  }
+
+  /**
+   * Creates a new {@link Entity} instance from a JSON-Over-Bebop string. Type checking is performed.
+   */
+  public static fromJSON(json: string): IEntity {
+    if (typeof json !== 'string' || json.trim().length === 0) {
+      throw new BebopRuntimeError(`Entity.fromJSON: expected string`);
+    }
+    const parsed = JSON.parse(json, BebopJson.reviver);
+    Entity.validateCompatibility(parsed);
+    return Entity.unsafeCast(parsed);
+  }
+  public encode(): Uint8Array {
+    return Entity.encode(this);
+  }
+
+  public static encode(record: IEntity): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    Entity.encodeInto(record, view);
+    return view.toArray();
+  }
+
+  public static encodeInto(record: IEntity, view: BebopView): number {
+    const before = view.length;
+    const pos = view.reserveMessageLength();
+    const start = view.length;
+    if (record.id !== undefined) {
+      view.writeByte(1);
+      view.writeUint32(record.id);
+    }
+    if (record.parent !== undefined) {
+      view.writeByte(2);
+      view.writeUint32(record.parent);
+    }
+    if (record.children !== undefined) {
+      view.writeByte(3);
+      {
+      const length0 = record.children.length;
+      view.writeUint32(length0);
+      for (let i0 = 0; i0 < length0; i0++) {
+        view.writeUint32(record.children[i0]);
+      }
+    }
+    }
+    if (record.tags !== undefined) {
+      view.writeByte(4);
+      view.writeInt32(record.tags);
+    }
+    if (record.position !== undefined) {
+      view.writeByte(5);
+      Point.encodeInto(record.position, view)
+    }
+    if (record.sprite !== undefined) {
+      view.writeByte(6);
+      Sprite.encodeInto(record.sprite, view)
+    }
+    if (record.mana !== undefined) {
+      view.writeByte(7);
+      Pool.encodeInto(record.mana, view)
+    }
+    if (record.name !== undefined) {
+      view.writeByte(8);
+      view.writeString(record.name);
+    }
+    if (record.ticking !== undefined) {
+      view.writeByte(9);
+      view.writeByte(Number(record.ticking));
+    }
+    if (record.player !== undefined) {
+      view.writeByte(10);
+      view.writeString(record.player);
+    }
+    if (record.geometry !== undefined) {
+      view.writeByte(11);
+      Geometry.encodeInto(record.geometry, view)
+    }
+    view.writeByte(0);
+    const end = view.length;
+    view.fillMessageLength(pos, end - start);
+    const after = view.length;
+    return after - before;
+  }
+
+  public static decode(buffer: Uint8Array): IEntity {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return Entity.readFrom(view);
+  }
+
+  public static readFrom(view: BebopView): IEntity {
+    let message: IEntity = {};
+    const length = view.readMessageLength();
+    const end = view.index + length;
+    while (true) {
+      switch (view.readByte()) {
+        case 0:
+          return new Entity(message);
+
+        case 1:
+          message.id = view.readUint32();
+          break;
+
+        case 2:
+          message.parent = view.readUint32();
+          break;
+
+        case 3:
+          {
+        let length0 = view.readUint32();
+        message.children = new Array<number>(length0);
+        for (let i0 = 0; i0 < length0; i0++) {
+          let x0: number;
+          x0 = view.readUint32();
+          message.children[i0] = x0;
+        }
+      }
+          break;
+
+        case 4:
+          message.tags = view.readInt32();
+          break;
+
+        case 5:
+          message.position = Point.readFrom(view);
+          break;
+
+        case 6:
+          message.sprite = Sprite.readFrom(view);
+          break;
+
+        case 7:
+          message.mana = Pool.readFrom(view);
+          break;
+
+        case 8:
+          message.name = view.readString();
+          break;
+
+        case 9:
+          message.ticking = !!view.readByte();
+          break;
+
+        case 10:
+          message.player = view.readString();
+          break;
+
+        case 11:
+          message.geometry = Geometry.readFrom(view);
+          break;
+
+        default:
+          view.index = end;
+          return new Entity(message);
+      }
+    }
+  }
+}
+
+
+export interface IGeometry extends BebopRecord {
+
+  readonly dimensions: IPoint;
+
+  readonly topology: Array<number>;
+}
+
+export class Geometry implements IGeometry {
+  public readonly dimensions: IPoint;
+  public readonly topology: Array<number>;
+
+  constructor(record: IGeometry) {
+    this.dimensions = record.dimensions;
+    this.topology = record.topology;
+  }
+
+  /**
+   * Serializes the current instance into a JSON-Over-Bebop string
+   */
+  public stringify(): string {
+    return Geometry.encodeToJSON(this);
+  }
+
+  /**
+   * Serializes the specified object into a JSON-Over-Bebop string
+   */
+  public static encodeToJSON(record: IGeometry): string {
+    return JSON.stringify(record, BebopJson.replacer);
+  }
+
+  /**
+   * Validates that the runtime types of members in the current instance are correct.
+   */
+  public validateTypes(): void {
+    Geometry.validateCompatibility(this);
+  }
+
+  /**
+   * Validates that the specified dynamic object can become an instance of {@link Geometry}.
+   */
+  public static validateCompatibility(record: IGeometry): void {
+    Point.validateCompatibility(record.dimensions);
+    BebopTypeGuard.ensureArray(record.topology, BebopTypeGuard.ensureUint16);
+  }
+
+  /**
+   * Unsafely creates an instance of {@link Geometry} from the specified dynamic object. No type checking is performed.
+   */
+  public static unsafeCast(record: any): IGeometry {
+      record.dimensions = Point.unsafeCast(record.dimensions);
+      return new Geometry(record);
+  }
+
+  /**
+   * Creates a new {@link Geometry} instance from a JSON-Over-Bebop string. Type checking is performed.
+   */
+  public static fromJSON(json: string): IGeometry {
+    if (typeof json !== 'string' || json.trim().length === 0) {
+      throw new BebopRuntimeError(`Geometry.fromJSON: expected string`);
+    }
+    const parsed = JSON.parse(json, BebopJson.reviver);
+    Geometry.validateCompatibility(parsed);
+    return Geometry.unsafeCast(parsed);
+  }
+  public encode(): Uint8Array {
+    return Geometry.encode(this);
+  }
+
+  public static encode(record: IGeometry): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    Geometry.encodeInto(record, view);
+    return view.toArray();
+  }
+
+  public static encodeInto(record: IGeometry, view: BebopView): number {
+    const before = view.length;
+    Point.encodeInto(record.dimensions, view)
+    {
+      const length0 = record.topology.length;
+      view.writeUint32(length0);
+      for (let i0 = 0; i0 < length0; i0++) {
+        view.writeUint16(record.topology[i0]);
+      }
+    }
+    const after = view.length;
+    return after - before;
+  }
+
+  public static decode(buffer: Uint8Array): IGeometry {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return Geometry.readFrom(view);
+  }
+
+  public static readFrom(view: BebopView): IGeometry {
+    let field0: IPoint;
+    field0 = Point.readFrom(view);
+    let field1: Array<number>;
+    {
+      let length0 = view.readUint32();
+      field1 = new Array<number>(length0);
+      for (let i0 = 0; i0 < length0; i0++) {
+        let x0: number;
+        x0 = view.readUint16();
+        field1[i0] = x0;
+      }
+    }
+    let message: IGeometry = {
+      dimensions: field0,
+      topology: field1,
+    };
+    return new Geometry(message);
+  }
+}
+
+
+export interface IPoint extends BebopRecord {
+
+  readonly x: number;
+
+  readonly y: number;
+
+  readonly z: number;
+}
+
+export class Point implements IPoint {
+  public readonly x: number;
+  public readonly y: number;
+  public readonly z: number;
+
+  constructor(record: IPoint) {
+    this.x = record.x;
+    this.y = record.y;
+    this.z = record.z;
+  }
+
+  /**
+   * Serializes the current instance into a JSON-Over-Bebop string
+   */
+  public stringify(): string {
+    return Point.encodeToJSON(this);
+  }
+
+  /**
+   * Serializes the specified object into a JSON-Over-Bebop string
+   */
+  public static encodeToJSON(record: IPoint): string {
+    return JSON.stringify(record, BebopJson.replacer);
+  }
+
+  /**
+   * Validates that the runtime types of members in the current instance are correct.
+   */
+  public validateTypes(): void {
+    Point.validateCompatibility(this);
+  }
+
+  /**
+   * Validates that the specified dynamic object can become an instance of {@link Point}.
+   */
+  public static validateCompatibility(record: IPoint): void {
+    BebopTypeGuard.ensureUint16(record.x)
+    BebopTypeGuard.ensureUint16(record.y)
+    BebopTypeGuard.ensureUint16(record.z)
+  }
+
+  /**
+   * Unsafely creates an instance of {@link Point} from the specified dynamic object. No type checking is performed.
+   */
+  public static unsafeCast(record: any): IPoint {
+      return new Point(record);
+  }
+
+  /**
+   * Creates a new {@link Point} instance from a JSON-Over-Bebop string. Type checking is performed.
+   */
+  public static fromJSON(json: string): IPoint {
+    if (typeof json !== 'string' || json.trim().length === 0) {
+      throw new BebopRuntimeError(`Point.fromJSON: expected string`);
+    }
+    const parsed = JSON.parse(json, BebopJson.reviver);
+    Point.validateCompatibility(parsed);
+    return Point.unsafeCast(parsed);
+  }
+  public encode(): Uint8Array {
+    return Point.encode(this);
+  }
+
+  public static encode(record: IPoint): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    Point.encodeInto(record, view);
+    return view.toArray();
+  }
+
+  public static encodeInto(record: IPoint, view: BebopView): number {
+    const before = view.length;
+    view.writeUint16(record.x);
+    view.writeUint16(record.y);
+    view.writeUint16(record.z);
+    const after = view.length;
+    return after - before;
+  }
+
+  public static decode(buffer: Uint8Array): IPoint {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return Point.readFrom(view);
+  }
+
+  public static readFrom(view: BebopView): IPoint {
+    let field0: number;
+    field0 = view.readUint16();
+    let field1: number;
+    field1 = view.readUint16();
+    let field2: number;
+    field2 = view.readUint16();
+    let message: IPoint = {
+      x: field0,
+      y: field1,
+      z: field2,
+    };
+    return new Point(message);
+  }
+}
+
+
+export interface IPool extends BebopRecord {
+
+  readonly points: number;
+
+  readonly min: number;
+
+  readonly max: number;
+
+  readonly rate: number;
+
+  readonly intervalMs: number;
+}
+
+export class Pool implements IPool {
+  public readonly points: number;
+  public readonly min: number;
+  public readonly max: number;
+  public readonly rate: number;
+  public readonly intervalMs: number;
+
+  constructor(record: IPool) {
+    this.points = record.points;
+    this.min = record.min;
+    this.max = record.max;
+    this.rate = record.rate;
+    this.intervalMs = record.intervalMs;
+  }
+
+  /**
+   * Serializes the current instance into a JSON-Over-Bebop string
+   */
+  public stringify(): string {
+    return Pool.encodeToJSON(this);
+  }
+
+  /**
+   * Serializes the specified object into a JSON-Over-Bebop string
+   */
+  public static encodeToJSON(record: IPool): string {
+    return JSON.stringify(record, BebopJson.replacer);
+  }
+
+  /**
+   * Validates that the runtime types of members in the current instance are correct.
+   */
+  public validateTypes(): void {
+    Pool.validateCompatibility(this);
+  }
+
+  /**
+   * Validates that the specified dynamic object can become an instance of {@link Pool}.
+   */
+  public static validateCompatibility(record: IPool): void {
+    BebopTypeGuard.ensureUint32(record.points)
+    BebopTypeGuard.ensureUint32(record.min)
+    BebopTypeGuard.ensureUint32(record.max)
+    BebopTypeGuard.ensureUint32(record.rate)
+    BebopTypeGuard.ensureUint32(record.intervalMs)
+  }
+
+  /**
+   * Unsafely creates an instance of {@link Pool} from the specified dynamic object. No type checking is performed.
+   */
+  public static unsafeCast(record: any): IPool {
+      return new Pool(record);
+  }
+
+  /**
+   * Creates a new {@link Pool} instance from a JSON-Over-Bebop string. Type checking is performed.
+   */
+  public static fromJSON(json: string): IPool {
+    if (typeof json !== 'string' || json.trim().length === 0) {
+      throw new BebopRuntimeError(`Pool.fromJSON: expected string`);
+    }
+    const parsed = JSON.parse(json, BebopJson.reviver);
+    Pool.validateCompatibility(parsed);
+    return Pool.unsafeCast(parsed);
+  }
+  public encode(): Uint8Array {
+    return Pool.encode(this);
+  }
+
+  public static encode(record: IPool): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    Pool.encodeInto(record, view);
+    return view.toArray();
+  }
+
+  public static encodeInto(record: IPool, view: BebopView): number {
+    const before = view.length;
+    view.writeUint32(record.points);
+    view.writeUint32(record.min);
+    view.writeUint32(record.max);
+    view.writeUint32(record.rate);
+    view.writeUint32(record.intervalMs);
+    const after = view.length;
+    return after - before;
+  }
+
+  public static decode(buffer: Uint8Array): IPool {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return Pool.readFrom(view);
+  }
+
+  public static readFrom(view: BebopView): IPool {
+    let field0: number;
+    field0 = view.readUint32();
+    let field1: number;
+    field1 = view.readUint32();
+    let field2: number;
+    field2 = view.readUint32();
+    let field3: number;
+    field3 = view.readUint32();
+    let field4: number;
+    field4 = view.readUint32();
+    let message: IPool = {
+      points: field0,
+      min: field1,
+      max: field2,
+      rate: field3,
+      intervalMs: field4,
+    };
+    return new Pool(message);
+  }
+}
+
+
+export interface ISprite extends BebopRecord {
+
+  url?: string;
+
+  texture?: string;
+}
+
+export class Sprite implements ISprite {
+  public url?: string;
+  public texture?: string;
+
+  constructor(record: ISprite) {
+    this.url = record.url;
+    this.texture = record.texture;
+  }
+
+  /**
+   * Serializes the current instance into a JSON-Over-Bebop string
+   */
+  public stringify(): string {
+    return Sprite.encodeToJSON(this);
+  }
+
+  /**
+   * Serializes the specified object into a JSON-Over-Bebop string
+   */
+  public static encodeToJSON(record: ISprite): string {
+    return JSON.stringify(record, BebopJson.replacer);
+  }
+
+  /**
+   * Validates that the runtime types of members in the current instance are correct.
+   */
+  public validateTypes(): void {
+    Sprite.validateCompatibility(this);
+  }
+
+  /**
+   * Validates that the specified dynamic object can become an instance of {@link Sprite}.
+   */
+  public static validateCompatibility(record: ISprite): void {
+    if (record.url !== undefined) {
+      BebopTypeGuard.ensureString(record.url)
+    }
+    if (record.texture !== undefined) {
+      BebopTypeGuard.ensureString(record.texture)
+    }
+  }
+
+  /**
+   * Unsafely creates an instance of {@link Sprite} from the specified dynamic object. No type checking is performed.
+   */
+  public static unsafeCast(record: any): ISprite {
+      return new Sprite(record);
+  }
+
+  /**
+   * Creates a new {@link Sprite} instance from a JSON-Over-Bebop string. Type checking is performed.
+   */
+  public static fromJSON(json: string): ISprite {
+    if (typeof json !== 'string' || json.trim().length === 0) {
+      throw new BebopRuntimeError(`Sprite.fromJSON: expected string`);
+    }
+    const parsed = JSON.parse(json, BebopJson.reviver);
+    Sprite.validateCompatibility(parsed);
+    return Sprite.unsafeCast(parsed);
+  }
+  public encode(): Uint8Array {
+    return Sprite.encode(this);
+  }
+
+  public static encode(record: ISprite): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    Sprite.encodeInto(record, view);
+    return view.toArray();
+  }
+
+  public static encodeInto(record: ISprite, view: BebopView): number {
+    const before = view.length;
+    const pos = view.reserveMessageLength();
+    const start = view.length;
+    if (record.url !== undefined) {
+      view.writeByte(1);
+      view.writeString(record.url);
+    }
+    if (record.texture !== undefined) {
+      view.writeByte(2);
+      view.writeString(record.texture);
+    }
+    view.writeByte(0);
+    const end = view.length;
+    view.fillMessageLength(pos, end - start);
+    const after = view.length;
+    return after - before;
+  }
+
+  public static decode(buffer: Uint8Array): ISprite {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return Sprite.readFrom(view);
+  }
+
+  public static readFrom(view: BebopView): ISprite {
+    let message: ISprite = {};
+    const length = view.readMessageLength();
+    const end = view.index + length;
+    while (true) {
+      switch (view.readByte()) {
+        case 0:
+          return new Sprite(message);
+
+        case 1:
+          message.url = view.readString();
+          break;
+
+        case 2:
+          message.texture = view.readString();
+          break;
+
+        default:
+          view.index = end;
+          return new Sprite(message);
+      }
+    }
+  }
+}
+
+
+export interface IBasicChargeParams extends BebopRecord {
+
+  readonly query: Uint8Array;
+
+  readonly pool: number;
+}
+
+export class BasicChargeParams implements IBasicChargeParams {
+  public readonly discriminator: number = 1 as 1;
+  public static readonly discriminator: number = 1 as 1;
+  public readonly query: Uint8Array;
+  public readonly pool: number;
+
+  constructor(record: IBasicChargeParams) {
+    this.query = record.query;
+    this.pool = record.pool;
+  }
+
+  /**
+   * Serializes the current instance into a JSON-Over-Bebop string
+   */
+  public stringify(): string {
+    return BasicChargeParams.encodeToJSON(this);
+  }
+
+  /**
+   * Serializes the specified object into a JSON-Over-Bebop string
+   */
+  public static encodeToJSON(record: IBasicChargeParams): string {
+    return JSON.stringify(record, BebopJson.replacer);
+  }
+
+  /**
+   * Validates that the runtime types of members in the current instance are correct.
+   */
+  public validateTypes(): void {
+    BasicChargeParams.validateCompatibility(this);
+  }
+
+  /**
+   * Validates that the specified dynamic object can become an instance of {@link BasicChargeParams}.
+   */
+  public static validateCompatibility(record: IBasicChargeParams): void {
+    BebopTypeGuard.ensureArray(record.query, BebopTypeGuard.ensureUint8);
+    BebopTypeGuard.ensureUint8(record.pool)
+  }
+
+  /**
+   * Unsafely creates an instance of {@link BasicChargeParams} from the specified dynamic object. No type checking is performed.
+   */
+  public static unsafeCast(record: any): IBasicChargeParams {
+      return new BasicChargeParams(record);
+  }
+
+  /**
+   * Creates a new {@link BasicChargeParams} instance from a JSON-Over-Bebop string. Type checking is performed.
+   */
+  public static fromJSON(json: string): IBasicChargeParams {
+    if (typeof json !== 'string' || json.trim().length === 0) {
+      throw new BebopRuntimeError(`BasicChargeParams.fromJSON: expected string`);
+    }
+    const parsed = JSON.parse(json, BebopJson.reviver);
+    BasicChargeParams.validateCompatibility(parsed);
+    return BasicChargeParams.unsafeCast(parsed);
+  }
+  public encode(): Uint8Array {
+    return BasicChargeParams.encode(this);
+  }
+
+  public static encode(record: IBasicChargeParams): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    BasicChargeParams.encodeInto(record, view);
+    return view.toArray();
+  }
+
+  public static encodeInto(record: IBasicChargeParams, view: BebopView): number {
+    const before = view.length;
+    view.writeBytes(record.query);
+    view.writeByte(record.pool);
+    const after = view.length;
+    return after - before;
+  }
+
+  public static decode(buffer: Uint8Array): IBasicChargeParams {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return BasicChargeParams.readFrom(view);
+  }
+
+  public static readFrom(view: BebopView): IBasicChargeParams {
+    let field0: Uint8Array;
+    field0 = view.readBytes();
+    let field1: number;
+    field1 = view.readByte();
+    let message: IBasicChargeParams = {
+      query: field0,
+      pool: field1,
+    };
+    return new BasicChargeParams(message);
+  }
+}
+
+
+export type ISystemType
+  = { discriminator: 1, value: IBasicChargeParams };
+
+export interface ISystem extends BebopRecord {
+  readonly data: ISystemType;
+}
+export class System implements ISystem {
+
+  public readonly data: ISystemType;
+
+  private constructor(data: ISystemType) {
+    this.data = data;
+  }
+
+  public get discriminator() {
+    return this.data.discriminator;
+  }
+
+  public get value() {
+    return this.data.value;
+  }
+
+  public static fromBasicChargeParams(value: IBasicChargeParams) {
+    return new System({ discriminator: 1, value: new BasicChargeParams(value)});
+  }
+
+  public isBasicChargeParams(): this is { value: BasicChargeParams } & { data: Extract<ISystemType, { discriminator: 1 }> } {
+    return this.data.value instanceof BasicChargeParams;
+  }
+
+
+  /**
+   * Serializes the current instance into a JSON-Over-Bebop string
+   */
+  public stringify(): string {
+    return System.encodeToJSON(this);
+  }
+
+  /**
+   * Serializes the specified object into a JSON-Over-Bebop string
+   */
+  public static encodeToJSON(record: ISystem): string {
+    delete (record.data.value as any).discriminator;
+    return JSON.stringify(record, BebopJson.replacer);
+  }
+
+  /**
+   * Validates that the runtime types of members in the current instance are correct.
+   */
+  public validateTypes(): void {
+    System.validateCompatibility(this);
+  }
+
+  /**
+   * Validates that the specified dynamic object can become an instance of {@link System}.
+   */
+  public static validateCompatibility(record: ISystem): void {
+    const discriminator = record.data.discriminator;
+    BebopTypeGuard.ensureUint8(discriminator);
+    switch (discriminator) {
+      case 1: {
+        BasicChargeParams.validateCompatibility(record.data.value);
+        break;
+      }
+      default: {
+        throw new Error(`Unknown discriminator for System: ${discriminator}`);
+      }
+    }
+  }
+
+  /**
+   * Unsafely creates an instance of {@link System} from the specified dynamic object. No type checking is performed.
+   */
+  public static unsafeCast(record: any): System {
+      const discriminator = record.data.discriminator;
+      switch (discriminator) {
+        case 1: {
+          return new System({ discriminator: 1, value: BasicChargeParams.unsafeCast(record.value) });
+        }
+      }
+      throw new BebopRuntimeError(`Failed to unsafely cast union from discriminator: ${discriminator}`);
+  }
+
+  /**
+   * Creates a new {@link System} instance from a JSON-Over-Bebop string. Type checking is performed.
+   */
+  public static fromJSON(json: string): System {
+    if (typeof json !== 'string' || json.trim().length === 0) {
+      throw new BebopRuntimeError(`System.fromJSON: expected string`);
+    }
+    const parsed = JSON.parse(json, BebopJson.reviver);
+    System.validateCompatibility(parsed);
+    return System.unsafeCast(parsed);
+  }
+  public encode(): Uint8Array {
+    return System.encode(this);
+  }
+
+  public static encode(record: ISystem): Uint8Array {
+    const view = BebopView.getInstance();
+    view.startWriting();
+    System.encodeInto(record, view);
+    return view.toArray();
+  }
+
+  public static encodeInto(record: ISystem, view: BebopView): number {
+    const before = view.length;
+    const pos = view.reserveMessageLength();
+    const start = view.length + 1;
+    view.writeByte(record.data.discriminator);
+    switch (record.data.discriminator) {
+      case 1:
+        BasicChargeParams.encodeInto(record.data.value, view);
+        break;
+    }
+    const end = view.length;
+    view.fillMessageLength(pos, end - start);
+    const after = view.length;
+    return after - before;
+  }
+
+  public static decode(buffer: Uint8Array): System {
+    const view = BebopView.getInstance();
+    view.startReading(buffer);
+    return System.readFrom(view);
+  }
+
+  public static readFrom(view: BebopView): System {
+    const length = view.readMessageLength();
+    const end = view.index + 1 + length;
+    switch (view.readByte()) {
+      case 1:
+        return this.fromBasicChargeParams(BasicChargeParams.readFrom(view));
+      default:
+        view.index = end;
+        throw new BebopRuntimeError("Unrecognized discriminator while decoding System");
+    }
+  }
+}
+
 /**
  * `Greeter` is a service that provides a method for generating greeting messages.
  */

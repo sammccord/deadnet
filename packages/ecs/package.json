@@ -1,0 +1,24 @@
+{
+  "name": "@deadnet/ecs",
+  "version": "0.0.0",
+  "description": "",
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    "./lib/*": "./lib/*.ts"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc -b -w",
+    "test": "bun test"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bun": "^1.1.5",
+    "typescript": "^5.5.2"
+  },
+  "dependencies": {
+    "typedfastbitset": "^0.4.2"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "@deadnet/rot",
+  "version": "2.2.0",
+  "description": "A roguelike toolkit in JavaScript",
+  "keywords": [
+    "ascii",
+    "dungeon",
+    "fov",
+    "game",
+    "libtcod",
+    "lighting",
+    "los",
+    "rng",
+    "rogue",
+    "roguelike",
+    "tiles"
+  ],
+  "files": ["lib", "dist"],
+  "exports": {
+    "./lib/*": "./lib/*.ts"
+  },
+  "homepage": "http://ondras.github.io/rot.js/hp/",
+  "bugs": "https://github.com/ondras/rot.js/issues",
+  "license": "BSD-3-Clause",
+  "author": "Ondřej Žára <ondrej.zara@gmail.com> (http://ondras.zarovi.cz/)",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ondras/rot.js.git"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.2"
+  },
+  "types": "./dist/index.d.ts"
+}

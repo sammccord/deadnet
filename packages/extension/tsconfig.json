@@ -6,5 +6,9 @@
     "jsxImportSource": "solid-js"
   },
   "include": ["src"],
-  "references": [{ "path": "../bebop" }]
+  "references": [
+    { "path": "../bebop" },
+    { "path": "../rot" },
+    { "path": "../ecs" }
+  ]
 }

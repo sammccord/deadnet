@@ -1,10 +1,8 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "composite": true,
-    "allowImportingTsExtensions": true
+    "rootDir": "lib",
+    "composite": true
   },
-  "include": [
-    "lib"
-  ]
+  "include": ["lib"]
 }

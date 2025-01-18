@@ -1,13 +1,8 @@
 {
   "compilerOptions": {
     // Enable latest features
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
-    "types": [
-      "bun"
-    ],
+    "lib": ["ESNext", "DOM"],
+    "types": ["bun"],
     "target": "ESNext",
     "module": "ESNext",
     "moduleDetection": "force",
@@ -16,7 +11,9 @@
     "allowJs": true,
     // Bundler mode
     "moduleResolution": "bundler",
-    "verbatimModuleSyntax": true,
+    "composite": true,
+    "isolatedModules": true,
+    // "verbatimModuleSyntax": true,
     // Best practices
     "strict": true,
     "skipLibCheck": true,
@@ -26,9 +23,9 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
     "paths": {
-      "@deadnet/bebop/*": [
-        "./packages/bebop/lib/*"
-      ]
+      "@deadnet/*": ["./packages/*/src/index.ts"],
+      "@deadnet/rot/lib/*": ["./packages/rot/lib/*"],
+      "@deadnet/ecs/lib/*": ["./packages/ecs/lib/*"]
     }
   }
 }

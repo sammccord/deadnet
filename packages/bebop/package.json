@@ -2,11 +2,8 @@
   "name": "@deadnet/bebop",
   "type": "module",
   "exports": {
-    "./bebop": "./lib/bebop.ts",
-    "./createDuplexIterator": "./lib/createDuplexIterator.ts",
-    "./createEventIterator": "./lib/createEventIterator.ts",
-    "./extensionChannel": "./lib/extensionChannel.ts",
-    "./wsChannel": "./lib/wsChannel.ts"
+    ".": "./lib/index.ts",
+    "./lib/*": "./lib/*.ts"
   },
   "scripts": {
     "build": "./../../node_modules/.bin/bebopc build",

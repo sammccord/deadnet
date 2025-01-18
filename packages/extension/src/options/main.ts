@@ -1,7 +1,7 @@
-import { GreeterClient } from '@deadnet/bebop/bebop';
-import { TempoExtensionChannel } from '@deadnet/bebop/extensionChannel';
+import { GreeterClient } from '@deadnet/bebop/lib/bebop';
+import { TempoExtensionChannel } from '@deadnet/bebop/lib/extensionChannel';
 import { render } from 'solid-js/web';
-import { App } from '../content-scripts/script/App';
+import { App } from '../game/App';
 
 // Establish a connection to the server using TempoChannel
 const channel = new TempoExtensionChannel();
